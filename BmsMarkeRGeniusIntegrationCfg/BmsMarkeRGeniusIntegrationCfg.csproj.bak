@@ -1,0 +1,290 @@
+﻿<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{D7008DFD-0437-48FC-9D7F-D2009167C458}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BmsMarkeRGeniusIntegrationCfg</RootNamespace>
+    <AssemblyName>BmsMarkeRGeniusIntegrationCfg</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\Output\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>settings_256.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DevExpress.BonusSkins.v21.2" />
+    <Reference Include="DevExpress.Data.Desktop.v21.2" />
+    <Reference Include="DevExpress.Data.v21.2" />
+    <Reference Include="DevExpress.Images.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Office.v21.2.Core, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Pdf.v21.2.Core, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Printing.v21.2.Core" />
+    <Reference Include="DevExpress.RichEdit.v21.2.Core, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Utils.v21.2" />
+    <Reference Include="DevExpress.XtraBars.v21.2" />
+    <Reference Include="DevExpress.Sparkline.v21.2.Core" />
+    <Reference Include="DevExpress.XtraDialogs.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraEditors.v21.2" />
+    <Reference Include="DevExpress.XtraGrid.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraLayout.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraPrinting.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraRichEdit.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraScheduler.v21.2, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraScheduler.v21.2.Core, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraScheduler.v21.2.Core.Desktop, Version=21.2.6.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="Interop.UnityObjects">
+      <HintPath>..\..\..\Ekstra\Dependency\Interop.UnityObjects.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="MySql.Data, Version=6.10.9.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
+      <HintPath>..\packages\MySql.Data.6.10.9\lib\net452\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="PoorMansTSqlFormatterLib35, Version=1.4.3.22897, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Output\PoorMansTSqlFormatterLib35.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Genius2Logo\Control\Frm_Control_Salesman.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Control\Frm_Control_Salesman.Designer.cs">
+      <DependentUpon>Frm_Control_Salesman.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Control\Frm_Control_Item.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Control\Frm_Control_Item.Designer.cs">
+      <DependentUpon>Frm_Control_Item.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Control\Frm_Control_Client.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Control\Frm_Control_Client.Designer.cs">
+      <DependentUpon>Frm_Control_Client.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Definition\Frm_Default.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Definition\Frm_Default.Designer.cs">
+      <DependentUpon>Frm_Default.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Definition\Frm_Mapping.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Definition\Frm_Mapping.Designer.cs">
+      <DependentUpon>Frm_Mapping.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Definition\Frm_PaymentMapping.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Definition\Frm_PaymentMapping.Designer.cs">
+      <DependentUpon>Frm_PaymentMapping.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FRM_Errors.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FRM_Errors.Designer.cs">
+      <DependentUpon>FRM_Errors.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Integration\Frm_PosEODCancel.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Integration\Frm_PosEODCancel.Designer.cs">
+      <DependentUpon>Frm_PosEODCancel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Genius2Logo\Integration\Frm_PosEOD.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Genius2Logo\Integration\Frm_PosEOD.Designer.cs">
+      <DependentUpon>Frm_PosEOD.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FRM_DBSETTINGS.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FRM_DBSETTINGS.Designer.cs">
+      <DependentUpon>FRM_DBSETTINGS.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FRM_LOGIN.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FRM_LOGIN.Designer.cs">
+      <DependentUpon>FRM_LOGIN.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FRM_MAIN.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FRM_MAIN.Designer.cs">
+      <DependentUpon>FRM_MAIN.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Logo2Genius\Definition\Frm_IbmKasa.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Logo2Genius\Definition\Frm_IbmKasa.Designer.cs">
+      <DependentUpon>Frm_IbmKasa.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Logo2Genius\Transaction\Frm_Cari.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Logo2Genius\Transaction\Frm_Cari.Designer.cs">
+      <DependentUpon>Frm_Cari.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Logo2Genius\Transaction\Frm_Malzeme.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Logo2Genius\Transaction\Frm_Malzeme.Designer.cs">
+      <DependentUpon>Frm_Malzeme.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="PROGRESSFORM.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PROGRESSFORM.Designer.cs">
+      <DependentUpon>PROGRESSFORM.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Genius2Logo\Control\Frm_Control_Salesman.resx">
+      <DependentUpon>Frm_Control_Salesman.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Control\Frm_Control_Item.resx">
+      <DependentUpon>Frm_Control_Item.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Control\Frm_Control_Client.resx">
+      <DependentUpon>Frm_Control_Client.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Definition\Frm_Default.resx">
+      <DependentUpon>Frm_Default.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Definition\Frm_Mapping.resx">
+      <DependentUpon>Frm_Mapping.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Definition\Frm_PaymentMapping.resx">
+      <DependentUpon>Frm_PaymentMapping.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FRM_Errors.resx">
+      <DependentUpon>FRM_Errors.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Integration\Frm_PosEODCancel.resx">
+      <DependentUpon>Frm_PosEODCancel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Genius2Logo\Integration\Frm_PosEOD.resx">
+      <DependentUpon>Frm_PosEOD.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FRM_DBSETTINGS.resx">
+      <DependentUpon>FRM_DBSETTINGS.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FRM_LOGIN.resx">
+      <DependentUpon>FRM_LOGIN.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FRM_MAIN.resx">
+      <DependentUpon>FRM_MAIN.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Logo2Genius\Definition\Frm_IbmKasa.resx">
+      <DependentUpon>Frm_IbmKasa.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Logo2Genius\Transaction\Frm_Cari.resx">
+      <DependentUpon>Frm_Cari.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Logo2Genius\Transaction\Frm_Malzeme.resx">
+      <DependentUpon>Frm_Malzeme.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PROGRESSFORM.resx">
+      <DependentUpon>PROGRESSFORM.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\licenses.licx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="settings_256.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BmsMarkeRGeniusIntegrationLibrary\BmsMarkeRGeniusIntegrationLibrary.csproj">
+      <Project>{41bf590d-491a-49c3-ba9a-b8cfd443cb25}</Project>
+      <Name>BmsMarkeRGeniusIntegrationLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="UnityObjects">
+      <Guid>{51F6657D-9972-45FD-8D5D-98849802A9C9}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
