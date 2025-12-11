@@ -68,9 +68,9 @@
             this.p_Top.Controls.Add(this.gb_OrderTypes);
             this.p_Top.Dock = System.Windows.Forms.DockStyle.Top;
             this.p_Top.Location = new System.Drawing.Point(0, 0);
-            this.p_Top.Margin = new System.Windows.Forms.Padding(4);
+            this.p_Top.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.p_Top.Name = "p_Top";
-            this.p_Top.Size = new System.Drawing.Size(1227, 98);
+            this.p_Top.Size = new System.Drawing.Size(1363, 119);
             this.p_Top.TabIndex = 0;
             // 
             // gb_OrderTypes
@@ -83,20 +83,20 @@
             this.gb_OrderTypes.Controls.Add(this.p_Date);
             this.gb_OrderTypes.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gb_OrderTypes.Location = new System.Drawing.Point(0, 0);
-            this.gb_OrderTypes.Margin = new System.Windows.Forms.Padding(4);
+            this.gb_OrderTypes.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.gb_OrderTypes.Name = "gb_OrderTypes";
-            this.gb_OrderTypes.Padding = new System.Windows.Forms.Padding(4);
-            this.gb_OrderTypes.Size = new System.Drawing.Size(1227, 98);
+            this.gb_OrderTypes.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.gb_OrderTypes.Size = new System.Drawing.Size(1363, 119);
             this.gb_OrderTypes.TabIndex = 0;
             this.gb_OrderTypes.TabStop = false;
             // 
             // rb_UnusedItems
             // 
             this.rb_UnusedItems.AutoSize = true;
-            this.rb_UnusedItems.Location = new System.Drawing.Point(680, 66);
-            this.rb_UnusedItems.Margin = new System.Windows.Forms.Padding(4);
+            this.rb_UnusedItems.Location = new System.Drawing.Point(756, 80);
+            this.rb_UnusedItems.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.rb_UnusedItems.Name = "rb_UnusedItems";
-            this.rb_UnusedItems.Size = new System.Drawing.Size(210, 23);
+            this.rb_UnusedItems.Size = new System.Drawing.Size(259, 28);
             this.rb_UnusedItems.TabIndex = 26;
             this.rb_UnusedItems.Text = "Kullanım Dışı Malzemeler";
             this.rb_UnusedItems.UseVisualStyleBackColor = true;
@@ -106,11 +106,11 @@
             this.gb_Branch.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
             this.gb_Branch.Controls.Add(this.gle_Value);
             this.gb_Branch.Dock = System.Windows.Forms.DockStyle.Left;
-            this.gb_Branch.Location = new System.Drawing.Point(4, 24);
-            this.gb_Branch.Margin = new System.Windows.Forms.Padding(4);
+            this.gb_Branch.Location = new System.Drawing.Point(4, 28);
+            this.gb_Branch.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.gb_Branch.Name = "gb_Branch";
-            this.gb_Branch.Padding = new System.Windows.Forms.Padding(4);
-            this.gb_Branch.Size = new System.Drawing.Size(300, 70);
+            this.gb_Branch.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.gb_Branch.Size = new System.Drawing.Size(333, 86);
             this.gb_Branch.TabIndex = 25;
             this.gb_Branch.TabStop = false;
             this.gb_Branch.Text = "Mağaza";
@@ -118,22 +118,22 @@
             // gle_Value
             // 
             this.gle_Value.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gle_Value.Location = new System.Drawing.Point(4, 24);
-            this.gle_Value.Margin = new System.Windows.Forms.Padding(4);
+            this.gle_Value.Location = new System.Drawing.Point(4, 28);
+            this.gle_Value.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.gle_Value.Name = "gle_Value";
             this.gle_Value.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
-            this.gle_Value.Size = new System.Drawing.Size(292, 26);
+            this.gle_Value.Size = new System.Drawing.Size(325, 38);
             this.gle_Value.TabIndex = 31;
             this.gle_Value.EditValueChanged += new System.EventHandler(this.gle_Value_EditValueChanged);
             // 
             // sb_Load
             // 
             this.sb_Load.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.sb_Load.Location = new System.Drawing.Point(924, 12);
-            this.sb_Load.Margin = new System.Windows.Forms.Padding(4);
+            this.sb_Load.Location = new System.Drawing.Point(1027, 15);
+            this.sb_Load.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.sb_Load.Name = "sb_Load";
-            this.sb_Load.Size = new System.Drawing.Size(166, 77);
+            this.sb_Load.Size = new System.Drawing.Size(184, 93);
             this.sb_Load.TabIndex = 22;
             this.sb_Load.Text = "Getir";
             this.sb_Load.Click += new System.EventHandler(this.sb_Load_Click);
@@ -142,10 +142,10 @@
             // 
             this.rb_ChangedItems.AutoSize = true;
             this.rb_ChangedItems.Checked = true;
-            this.rb_ChangedItems.Location = new System.Drawing.Point(310, 66);
-            this.rb_ChangedItems.Margin = new System.Windows.Forms.Padding(4);
+            this.rb_ChangedItems.Location = new System.Drawing.Point(344, 80);
+            this.rb_ChangedItems.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.rb_ChangedItems.Name = "rb_ChangedItems";
-            this.rb_ChangedItems.Size = new System.Drawing.Size(174, 23);
+            this.rb_ChangedItems.Size = new System.Drawing.Size(215, 28);
             this.rb_ChangedItems.TabIndex = 19;
             this.rb_ChangedItems.TabStop = true;
             this.rb_ChangedItems.Text = "Değişen Malzemeler";
@@ -154,10 +154,10 @@
             // rb_AllItems
             // 
             this.rb_AllItems.AutoSize = true;
-            this.rb_AllItems.Location = new System.Drawing.Point(508, 66);
-            this.rb_AllItems.Margin = new System.Windows.Forms.Padding(4);
+            this.rb_AllItems.Location = new System.Drawing.Point(564, 80);
+            this.rb_AllItems.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.rb_AllItems.Name = "rb_AllItems";
-            this.rb_AllItems.Size = new System.Drawing.Size(151, 23);
+            this.rb_AllItems.Size = new System.Drawing.Size(183, 28);
             this.rb_AllItems.TabIndex = 20;
             this.rb_AllItems.Text = "Tüm Malzemeler";
             this.rb_AllItems.UseVisualStyleBackColor = true;
@@ -168,37 +168,37 @@
             this.p_Date.Controls.Add(this.label4);
             this.p_Date.Controls.Add(this.de_StartDate);
             this.p_Date.Controls.Add(this.de_EndDate);
-            this.p_Date.Location = new System.Drawing.Point(315, 12);
-            this.p_Date.Margin = new System.Windows.Forms.Padding(4);
+            this.p_Date.Location = new System.Drawing.Point(350, 15);
+            this.p_Date.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.p_Date.Name = "p_Date";
-            this.p_Date.Size = new System.Drawing.Size(519, 51);
+            this.p_Date.Size = new System.Drawing.Size(577, 62);
             this.p_Date.TabIndex = 21;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(4, 16);
+            this.label3.Location = new System.Drawing.Point(4, 19);
             this.label3.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(86, 19);
+            this.label3.Size = new System.Drawing.Size(107, 24);
             this.label3.TabIndex = 11;
             this.label3.Text = "Baş. Tarih:";
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(260, 16);
+            this.label4.Location = new System.Drawing.Point(289, 19);
             this.label4.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(80, 19);
+            this.label4.Size = new System.Drawing.Size(99, 24);
             this.label4.TabIndex = 12;
             this.label4.Text = "Bit. Tarih:";
             // 
             // de_StartDate
             // 
             this.de_StartDate.EditValue = null;
-            this.de_StartDate.Location = new System.Drawing.Point(100, 12);
-            this.de_StartDate.Margin = new System.Windows.Forms.Padding(4);
+            this.de_StartDate.Location = new System.Drawing.Point(111, 15);
+            this.de_StartDate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.de_StartDate.Name = "de_StartDate";
             this.de_StartDate.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
@@ -206,14 +206,14 @@
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
             this.de_StartDate.Properties.MaskSettings.Set("useAdvancingCaret", true);
             this.de_StartDate.Properties.UseMaskAsDisplayFormat = true;
-            this.de_StartDate.Size = new System.Drawing.Size(150, 26);
+            this.de_StartDate.Size = new System.Drawing.Size(167, 38);
             this.de_StartDate.TabIndex = 9;
             // 
             // de_EndDate
             // 
             this.de_EndDate.EditValue = null;
-            this.de_EndDate.Location = new System.Drawing.Point(346, 12);
-            this.de_EndDate.Margin = new System.Windows.Forms.Padding(4);
+            this.de_EndDate.Location = new System.Drawing.Point(384, 15);
+            this.de_EndDate.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.de_EndDate.Name = "de_EndDate";
             this.de_EndDate.Properties.Buttons.AddRange(new DevExpress.XtraEditors.Controls.EditorButton[] {
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
@@ -221,7 +221,7 @@
             new DevExpress.XtraEditors.Controls.EditorButton(DevExpress.XtraEditors.Controls.ButtonPredefines.Combo)});
             this.de_EndDate.Properties.MaskSettings.Set("useAdvancingCaret", true);
             this.de_EndDate.Properties.UseMaskAsDisplayFormat = true;
-            this.de_EndDate.Size = new System.Drawing.Size(150, 26);
+            this.de_EndDate.Size = new System.Drawing.Size(167, 38);
             this.de_EndDate.TabIndex = 10;
             // 
             // p_Bottom
@@ -230,17 +230,18 @@
             this.p_Bottom.Controls.Add(this.l_FilePath);
             this.p_Bottom.Controls.Add(this.button1);
             this.p_Bottom.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.p_Bottom.Location = new System.Drawing.Point(0, 819);
-            this.p_Bottom.Margin = new System.Windows.Forms.Padding(4);
+            this.p_Bottom.Location = new System.Drawing.Point(0, 991);
+            this.p_Bottom.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.p_Bottom.Name = "p_Bottom";
-            this.p_Bottom.Size = new System.Drawing.Size(1227, 81);
+            this.p_Bottom.Size = new System.Drawing.Size(1363, 98);
             this.p_Bottom.TabIndex = 1;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(605, 20);
+            this.button2.Location = new System.Drawing.Point(672, 24);
+            this.button2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(622, 61);
+            this.button2.Size = new System.Drawing.Size(691, 74);
             this.button2.TabIndex = 27;
             this.button2.Text = "GENIUS KAYDET";
             this.button2.UseVisualStyleBackColor = true;
@@ -250,17 +251,18 @@
             // 
             this.l_FilePath.Dock = System.Windows.Forms.DockStyle.Top;
             this.l_FilePath.Location = new System.Drawing.Point(0, 0);
-            this.l_FilePath.Margin = new System.Windows.Forms.Padding(4);
+            this.l_FilePath.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.l_FilePath.Name = "l_FilePath";
-            this.l_FilePath.Size = new System.Drawing.Size(75, 19);
+            this.l_FilePath.Size = new System.Drawing.Size(86, 23);
             this.l_FilePath.TabIndex = 24;
             this.l_FilePath.Text = "DosyaYolu";
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(0, 20);
+            this.button1.Location = new System.Drawing.Point(0, 24);
+            this.button1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(599, 61);
+            this.button1.Size = new System.Drawing.Size(666, 74);
             this.button1.TabIndex = 26;
             this.button1.Text = "NCR KAYDET";
             this.button1.UseVisualStyleBackColor = true;
@@ -270,28 +272,28 @@
             // 
             this.p_Center.Controls.Add(this.grc_Malzeme);
             this.p_Center.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.p_Center.Location = new System.Drawing.Point(0, 98);
-            this.p_Center.Margin = new System.Windows.Forms.Padding(4);
+            this.p_Center.Location = new System.Drawing.Point(0, 119);
+            this.p_Center.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.p_Center.Name = "p_Center";
-            this.p_Center.Size = new System.Drawing.Size(1227, 721);
+            this.p_Center.Size = new System.Drawing.Size(1363, 872);
             this.p_Center.TabIndex = 1;
             // 
             // grc_Malzeme
             // 
             this.grc_Malzeme.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grc_Malzeme.EmbeddedNavigator.Margin = new System.Windows.Forms.Padding(4);
+            this.grc_Malzeme.EmbeddedNavigator.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.grc_Malzeme.Location = new System.Drawing.Point(0, 0);
             this.grc_Malzeme.MainView = this.grv_Malzeme;
-            this.grc_Malzeme.Margin = new System.Windows.Forms.Padding(4);
+            this.grc_Malzeme.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.grc_Malzeme.Name = "grc_Malzeme";
-            this.grc_Malzeme.Size = new System.Drawing.Size(1227, 721);
+            this.grc_Malzeme.Size = new System.Drawing.Size(1363, 872);
             this.grc_Malzeme.TabIndex = 0;
             this.grc_Malzeme.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.grv_Malzeme});
             // 
             // grv_Malzeme
             // 
-            this.grv_Malzeme.DetailHeight = 512;
+            this.grv_Malzeme.DetailHeight = 620;
             this.grv_Malzeme.GridControl = this.grc_Malzeme;
             this.grv_Malzeme.Name = "grv_Malzeme";
             this.grv_Malzeme.OptionsBehavior.Editable = false;
@@ -304,13 +306,13 @@
             // 
             // Frm_Malzeme
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 19F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 23F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1227, 900);
+            this.ClientSize = new System.Drawing.Size(1363, 1089);
             this.Controls.Add(this.p_Center);
             this.Controls.Add(this.p_Bottom);
             this.Controls.Add(this.p_Top);
-            this.Margin = new System.Windows.Forms.Padding(4);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "Frm_Malzeme";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Frm_CRUDs_FormClosed);
             this.p_Top.ResumeLayout(false);

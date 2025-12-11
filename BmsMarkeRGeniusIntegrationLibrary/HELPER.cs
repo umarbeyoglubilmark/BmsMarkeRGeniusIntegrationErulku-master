@@ -561,7 +561,12 @@ namespace BmsMarkeRGeniusIntegrationLibrary
         public static string InsertInvoice(string CARI_KOD, string BRANCH, Bms_Fiche_Header _BASLIK, List<Bms_Fiche_Detail> _DETAILS, bool withCustomer, string FIRMNR)
         {
             bool isCustomerExist = false;
-            try { isCustomerExist = Convert.ToBoolean(SqlSelectLogo($"SELECT COUNT(*) FROM LG_{FIRMNR}_CLCARD WHERE CODE='{_BASLIK.CUSTOMER_CODE}'").Rows[0][0]); } catch (Exception ex){ MessageBox.Show("Müşteri hatası!"); }
+            try { isCustomerExist = Convert.ToBoolean(SqlSelectLogo($"SELECT COUNT(*) FROM LG_{FIRMNR}_CLCARD WHERE CODE='{_BASLIK.CUSTOMER_CODE}'").Rows[0][0]); } catch (Exception ex)
+             
+            {
+                LOGYAZ($"Müşteri Hatası \n Ürün: {_BASLIK.CUSTOMER_CODE} \n Ex: {ex.Message.ToString()}", null);
+                isCustomerExist = false;
+            }
             if (!isCustomerExist)
                 _BASLIK.CUSTOMER_CODE = _BASLIK.CUSTOMER_CODE.TrimStart('0');
             HELPER.LOGYAZ(_BASLIK.DOCUMENT_NO.ToString(), null);
@@ -606,7 +611,11 @@ namespace BmsMarkeRGeniusIntegrationLibrary
                         throw new Exception("Ürün kodu bulunamadı tarih:" + _BASLIK.DATE_.ToString() + " pos:" + _BASLIK.POS.ToString());
                     transactions_lines.AppendLine();
                     double VatRate = 0;
-                    try { VatRate = double.Parse(HELPER.SqlSelectLogo($"SELECT VAT FROM LG_{FIRMNR}_ITEMS WITH(NOLOCK) WHERE CODE='" + line.ITEMCODE + "'").Rows[0][0].ToString()); } catch(Exception ex) { MessageBox.Show("VAT HATASI"); }
+                    try { VatRate = double.Parse(HELPER.SqlSelectLogo($"SELECT VAT FROM LG_{FIRMNR}_ITEMS WITH(NOLOCK) WHERE CODE='" + line.ITEMCODE + "'").Rows[0][0].ToString()); }
+                    catch(Exception ex) {
+                        LOGYAZ($"Vat Hatası \n Ürün: {line.ITEMCODE} \n Ex: {ex.Message.ToString()}",null);
+                        VatRate = 0;
+                    }
 
 
                     double priceFromDecmailToDouble = 0;
@@ -881,7 +890,23 @@ namespace BmsMarkeRGeniusIntegrationLibrary
         }
         public static UnityObjects.Data NewObjectData(UnityObjects.DataObjectType objecttype)
         {
-            return AppUnity.NewDataObject(objecttype);
+            if (AppUnity == null)
+            {
+                LOGYAZ("NewObjectData", new Exception($"AppUnity null. Logo'ya login yapılmamış olabilir. ObjectType: {objecttype}"));
+                throw new Exception($"Logo bağlantısı yok (AppUnity null). Önce Logo'ya login yapılmalı. ObjectType: {objecttype}");
+            }
+            if (!AppUnity.Connected)
+            {
+                LOGYAZ("NewObjectData", new Exception($"AppUnity Connected=false. Logo bağlantısı kopmuş. ObjectType: {objecttype}"));
+                throw new Exception($"Logo bağlantısı kopmuş (Connected=false). Yeniden login yapılmalı. ObjectType: {objecttype}");
+            }
+            var result = AppUnity.NewDataObject(objecttype);
+            if (result == null)
+            {
+                LOGYAZ("NewObjectData", new Exception($"NewDataObject null döndü. ObjectType: {objecttype}"));
+                throw new Exception($"Logo NewDataObject null döndü. ObjectType: {objecttype}");
+            }
+            return result;
         }
         public static string GetLastError(UnityObjects.Data doMain)
         {
@@ -1491,14 +1516,62 @@ namespace BmsMarkeRGeniusIntegrationLibrary
         }
         public static string InsertCHFiche(string BRANCH, Bms_Fiche_Payment _PAYMENT, string FIRMNR)
         {
+            LOGYAZ($"InsertCHFiche BASLADI - BRANCH:{BRANCH}, FIRMNR:{FIRMNR}, CUSTOMER_CODE:{_PAYMENT?.CUSTOMER_CODE}, LOGO_FICHE_TYPE:{_PAYMENT?.LOGO_FICHE_TYPE}, PAYMENT_TOTAL:{_PAYMENT?.PAYMENT_TOTAL}, DATE:{_PAYMENT?.DATE_}, DOCUMENT_NO:{_PAYMENT?.DOCUMENT_NO}", null);
+
+            // Parametre kontrolleri
+            if (_PAYMENT == null)
+            {
+                LOGYAZ("InsertCHFiche", new Exception("_PAYMENT parametresi null"));
+                return "_PAYMENT parametresi null";
+            }
+            if (string.IsNullOrEmpty(BRANCH))
+            {
+                LOGYAZ("InsertCHFiche", new Exception("BRANCH parametresi boş"));
+                return "BRANCH parametresi boş";
+            }
+            if (string.IsNullOrEmpty(FIRMNR))
+            {
+                LOGYAZ("InsertCHFiche", new Exception("FIRMNR parametresi boş"));
+                return "FIRMNR parametresi boş";
+            }
+            if (string.IsNullOrEmpty(_PAYMENT.CUSTOMER_CODE))
+            {
+                LOGYAZ("InsertCHFiche", new Exception("CUSTOMER_CODE boş"));
+                return "CUSTOMER_CODE boş";
+            }
+            if (string.IsNullOrEmpty(_PAYMENT.LOGO_FICHE_TYPE))
+            {
+                LOGYAZ("InsertCHFiche", new Exception("LOGO_FICHE_TYPE boş"));
+                return "LOGO_FICHE_TYPE boş";
+            }
+
             bool isCustomerExist = false;
-            try { isCustomerExist = Convert.ToBoolean(SqlSelectLogo($"SELECT COUNT(*) FROM LG_{FIRMNR}_CLCARD WHERE CODE='{_PAYMENT.CUSTOMER_CODE}'").Rows[0][0]); } catch { }
-            if (!isCustomerExist)
-                _PAYMENT.CUSTOMER_CODE = _PAYMENT.CUSTOMER_CODE.TrimStart('0');
             try
             {
+                LOGYAZ($"InsertCHFiche - Müşteri sorgusu yapılıyor: LG_{FIRMNR}_CLCARD, CODE={_PAYMENT.CUSTOMER_CODE}", null);
+                isCustomerExist = Convert.ToBoolean(SqlSelectLogo($"SELECT COUNT(*) FROM LG_{FIRMNR}_CLCARD WHERE CODE='{_PAYMENT.CUSTOMER_CODE}'").Rows[0][0]);
+                LOGYAZ($"InsertCHFiche - Müşteri sorgusu sonucu: isCustomerExist={isCustomerExist}", null);
+            }
+            catch (Exception custEx)
+            {
+                LOGYAZ($"InsertCHFiche - Müşteri sorgusu hatası", custEx);
+            }
+
+            if (!isCustomerExist)
+            {
+                string originalCode = _PAYMENT.CUSTOMER_CODE;
+                _PAYMENT.CUSTOMER_CODE = _PAYMENT.CUSTOMER_CODE.TrimStart('0');
+                LOGYAZ($"InsertCHFiche - Müşteri bulunamadı, kod düzeltildi: {originalCode} -> {_PAYMENT.CUSTOMER_CODE}", null);
+            }
+
+            try
+            {
+                LOGYAZ("InsertCHFiche - NewObjectData çağrılıyor (doARAPVoucher)", null);
                 UnityObjects.Data arpvoucher = NewObjectData(UnityObjects.DataObjectType.doARAPVoucher);
+                LOGYAZ("InsertCHFiche - NewObjectData başarılı, arpvoucher.New() çağrılıyor", null);
                 arpvoucher.New();
+                LOGYAZ("InsertCHFiche - arpvoucher.New() başarılı, field'lar ayarlanıyor", null);
+
                 arpvoucher.DataFields.FieldByName("NUMBER").Value = "~";
                 arpvoucher.DataFields.FieldByName("DATE").Value = _PAYMENT.DATE_.Date;
                 if (_PAYMENT.LOGO_FICHE_TYPE == "CH Kredi Karti" || _PAYMENT.LOGO_FICHE_TYPE == "CH Kredi Karti Iade" || _PAYMENT.LOGO_FICHE_TYPE == "CH Borc" || _PAYMENT.LOGO_FICHE_TYPE == "CH Alacak")
@@ -1512,23 +1585,9 @@ namespace BmsMarkeRGeniusIntegrationLibrary
                 arpvoucher.DataFields.FieldByName("AUXIL_CODE").Value = _PAYMENT.POS.ToString();
                 arpvoucher.DataFields.FieldByName("AUTH_CODE").Value = "BMS";
                 arpvoucher.DataFields.FieldByName("DIVISION").Value = BRANCH;
-                //arpvoucher.DataFields.FieldByName("DEPARTMENT").Value = 1;
-                //arpvoucher.DataFields.FieldByName("NOTES1").Value = FISACIKLAMA1;
-                //arpvoucher.DataFields.FieldByName("NOTES2").Value = FISACIKLAM2;
-                //arpvoucher.DataFields.FieldByName("NOTES3").Value = FISACIKLAMA3;
-                //arpvoucher.DataFields.FieldByName("NOTES4").Value = FISACIKLAMA4;
-                //arpvoucher.DataFields.FieldByName("TOTAL_CREDIT").Value = 123;
-                //arpvoucher.DataFields.FieldByName("CREATED_BY").Value = 1;
-                //arpvoucher.DataFields.FieldByName("DATE_CREATED").Value = 16.12.2022;
-                //arpvoucher.DataFields.FieldByName("HOUR_CREATED").Value = 16;
-                //arpvoucher.DataFields.FieldByName("MIN_CREATED").Value = 10;
-                //arpvoucher.DataFields.FieldByName("SEC_CREATED").Value = 39;
                 arpvoucher.DataFields.FieldByName("CURRSEL_TOTALS").Value = 1;
-                //arpvoucher.DataFields.FieldByName("DATA_REFERENCE").Value = 8;
-                //arpvoucher.DataFields.FieldByName("TIME").Value = 269029129;
-                //arpvoucher.DataFields.FieldByName("AFFECT_RISK").Value = 0;
-                //arpvoucher.DataFields.FieldByName("POS_TERMINAL_NR").Value = POSTRMNO;
-                //arpvoucher.DataFields.FieldByName("GUID").Value = 5BB49AF1 - BB64 - 46BE - 8765 - 7AB79E9CC64E;
+
+                LOGYAZ("InsertCHFiche - Header field'ları ayarlandı, satırlar ekleniyor", null);
 
                 UnityObjects.Lines transactions_lines = arpvoucher.DataFields.FieldByName("TRANSACTIONS").Lines;
                 transactions_lines.AppendLine();
@@ -1537,7 +1596,6 @@ namespace BmsMarkeRGeniusIntegrationLibrary
                 transactions_lines[transactions_lines.Count - 1].FieldByName("AUTH_CODE").Value = "BMS";
                 transactions_lines[transactions_lines.Count - 1].FieldByName("TRANNO").Value = "~";
                 transactions_lines[transactions_lines.Count - 1].FieldByName("DOC_NUMBER").Value = _PAYMENT.DOCUMENT_NO.ToString();
-                //transactions_lines[transactions_lines.Count - 1].FieldByName("DESCRIPTION").Value = SATIRACIKLAMA;
                 if (_PAYMENT.LOGO_FICHE_TYPE == "CH Kredi Karti" || _PAYMENT.LOGO_FICHE_TYPE == "CH Alacak")
                     transactions_lines[transactions_lines.Count - 1].FieldByName("CREDIT").Value = Convert.ToDouble(_PAYMENT.PAYMENT_TOTAL.ToString().Replace(".", ","));
                 if (_PAYMENT.LOGO_FICHE_TYPE == "CH Kredi Karti Iade" || _PAYMENT.LOGO_FICHE_TYPE == "CH Borc")
@@ -1549,27 +1607,30 @@ namespace BmsMarkeRGeniusIntegrationLibrary
                 transactions_lines[transactions_lines.Count - 1].FieldByName("TC_AMOUNT").Value = Convert.ToDouble(_PAYMENT.PAYMENT_TOTAL.ToString().Replace(".", ","));
                 transactions_lines[transactions_lines.Count - 1].FieldByName("BNLN_TC_XRATE").Value = 1;
                 transactions_lines[transactions_lines.Count - 1].FieldByName("BNLN_TC_AMOUNT").Value = Convert.ToDouble(_PAYMENT.PAYMENT_TOTAL.ToString().Replace(".", ","));
-                //transactions_lines[transactions_lines.Count - 1].FieldByName("CREDIT_CARD_NO").Value = SATIRKKNO;
                 transactions_lines[transactions_lines.Count - 1].FieldByName("MONTH").Value = _PAYMENT.DATE_.Month;
                 transactions_lines[transactions_lines.Count - 1].FieldByName("YEAR").Value = _PAYMENT.DATE_.Year;
-                //transactions_lines[transactions_lines.Count - 1].FieldByName("AFFECT_RISK").Value = 0;
-                //transactions_lines[transactions_lines.Count - 1].FieldByName("BATCH_NR").Value = SBATCH;
 
-                //transactions_lines[transactions_lines.Count - 1].FieldByName("DISTRIBUTION_TYPE_FNO").Value = 0;
-                //transactions_lines[transactions_lines.Count - 1].FieldByName("GUID").Value = AF05316B - 1E9C - 4916 - 9BCF - B3E74E2F8750;
+                LOGYAZ("InsertCHFiche - Satırlar eklendi, ReCalculate çağrılıyor", null);
                 arpvoucher.ReCalculate();
 
+                LOGYAZ("InsertCHFiche - ReCalculate tamamlandı, Post çağrılıyor", null);
                 if (!arpvoucher.Post())
-                    throw new Exception(GetLastError(arpvoucher));
+                {
+                    string postError = GetLastError(arpvoucher);
+                    LOGYAZ($"InsertCHFiche - Post BAŞARISIZ: {postError}", null);
+                    throw new Exception(postError);
+                }
+
                 int LOGOLREF = Convert.ToInt32(arpvoucher.DataFields.DBFieldByName("LOGICALREF").Value);
-                DateTime LOGOINSERTDATE = DateTime.Now;
+                LOGYAZ($"InsertCHFiche - Post BAŞARILI, LOGICALREF={LOGOLREF}", null);
+
                 if (LOGOLREF > 0)
                     return "ok";
                 else return "notok";
             }
             catch (Exception E)
             {
-                LOGYAZ("InsertCHFiche", E);
+                LOGYAZ($"InsertCHFiche HATA - BRANCH:{BRANCH}, CUSTOMER_CODE:{_PAYMENT?.CUSTOMER_CODE}, LOGO_FICHE_TYPE:{_PAYMENT?.LOGO_FICHE_TYPE}", E);
                 return E.Message;
             }
         }
@@ -2722,7 +2783,7 @@ namespace BmsMarkeRGeniusIntegrationLibrary
             public string productUnit { get; set; }
             public int vatPercent { get; set; }
             public int vatId { get; set; }
-            public int amount { get; set; }
+            public double amount { get; set; }
             public decimal TotalPrice { get; set; }
             public bool isValid { get; set; }
             public int taxableTotal { get; set; }

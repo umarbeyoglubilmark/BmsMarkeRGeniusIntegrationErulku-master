@@ -397,13 +397,16 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                 timeout: TimeSpan.FromSeconds(30)
             ).ConfigureAwait(false);
 
-            var http = new HttpClient(handler) { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(60) };
+            // Timeout artırıldı (yoğun günler için)
+            var http = new HttpClient(handler) { BaseAddress = new Uri(baseUrl), Timeout = TimeSpan.FromSeconds(180) };
             http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             http.DefaultRequestHeaders.Accept.Clear();
             http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             // Birden fazla posCode için dön
             string[] posCodes = { "4","8", "9", "10", "12" };
+            var failedPosCodes = new List<string>();
+
             foreach (var posCode in posCodes)
             {
                 POS_GLOBAL = posCode;
@@ -418,40 +421,93 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(bodyObj);
                 diag.RequestBody = json;
 
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-                var resp = await http.PostAsync(salesEndpoint, content, ct).ConfigureAwait(false);
-                var respText = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+                // Retry mekanizması (3 deneme)
+                int maxRetries = 3;
+                bool success = false;
+                string lastError = "";
 
-                if (!resp.IsSuccessStatusCode)
-                    continue;
-
-                try
+                for (int retry = 0; retry < maxRetries && !success; retry++)
                 {
-                    var root = JToken.Parse(respText);
-                    if (root is JArray arrRoot)
+                    try
                     {
-                        allResults.AddRange(arrRoot.ToObject<List<BmsMarkeRGeniusIntegrationLibrary.HELPER.Data>>());
-                        continue;
-                    }
-                    if (root is JObject obj)
-                    {
-                        var node =
-                              obj["datas"] ?? obj["Datas"]
-                           ?? obj["data"] ?? obj["Data"]
-                           ?? obj.SelectToken("result.datas") ?? obj.SelectToken("result.data")
-                           ?? obj.SelectToken("payload.datas") ?? obj.SelectToken("payload.data")
-                           ?? obj.SelectToken("response.datas") ?? obj.SelectToken("response.data")
-                           ?? obj.SelectToken("Result.Datas") ?? obj.SelectToken("Result.Data");
-
-                        if (node is JArray arr)
+                        if (retry > 0)
                         {
-                            allResults.AddRange(arr.ToObject<List<BmsMarkeRGeniusIntegrationLibrary.HELPER.Data>>());
+                            HELPER.LOGYAZ($"PosCode {posCode} için {retry + 1}. deneme yapılıyor...", null);
+                            await Task.Delay(2000 * retry, ct).ConfigureAwait(false); // Artan bekleme süresi
+                        }
+
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
+                        var resp = await http.PostAsync(salesEndpoint, content, ct).ConfigureAwait(false);
+                        var respText = await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        if (!resp.IsSuccessStatusCode)
+                        {
+                            lastError = $"HTTP {(int)resp.StatusCode}: {resp.ReasonPhrase}";
+                            HELPER.LOGYAZ($"API HATASI - PosCode: {posCode}, Deneme: {retry + 1}, Hata: {lastError}", null);
+                            continue;
+                        }
+
+                        var root = JToken.Parse(respText);
+                        if (root is JArray arrRoot)
+                        {
+                            allResults.AddRange(arrRoot.ToObject<List<BmsMarkeRGeniusIntegrationLibrary.HELPER.Data>>());
+                            success = true;
+                            continue;
+                        }
+                        if (root is JObject obj)
+                        {
+                            var node =
+                                  obj["datas"] ?? obj["Datas"]
+                               ?? obj["data"] ?? obj["Data"]
+                               ?? obj.SelectToken("result.datas") ?? obj.SelectToken("result.data")
+                               ?? obj.SelectToken("payload.datas") ?? obj.SelectToken("payload.data")
+                               ?? obj.SelectToken("response.datas") ?? obj.SelectToken("response.data")
+                               ?? obj.SelectToken("Result.Datas") ?? obj.SelectToken("Result.Data");
+
+                            if (node is JArray arr)
+                            {
+                                allResults.AddRange(arr.ToObject<List<BmsMarkeRGeniusIntegrationLibrary.HELPER.Data>>());
+                                success = true;
+                            }
+                            else
+                            {
+                                lastError = "API yanıtında 'datas' veya 'data' bulunamadı";
+                                HELPER.LOGYAZ($"API UYARI - PosCode: {posCode}, {lastError}, Keys: {string.Join(",", obj.Properties().Select(p => p.Name))}", null);
+                            }
                         }
                     }
+                    catch (TaskCanceledException)
+                    {
+                        lastError = "Timeout - API yanıt vermedi";
+                        HELPER.LOGYAZ($"API TIMEOUT - PosCode: {posCode}, Deneme: {retry + 1}", null);
+                    }
+                    catch (HttpRequestException hex)
+                    {
+                        lastError = hex.Message;
+                        HELPER.LOGYAZ($"API BAĞLANTI HATASI - PosCode: {posCode}, Deneme: {retry + 1}, Hata: {hex.Message}", null);
+                    }
+                    catch (Exception ex)
+                    {
+                        lastError = ex.Message;
+                        HELPER.LOGYAZ($"API GENEL HATA - PosCode: {posCode}, Deneme: {retry + 1}, Hata: {ex.Message}", null);
+                    }
                 }
-                catch (Exception ex)
+
+                if (!success)
                 {
-                    diag.Message = "JSON parse exception for posCode " + posCode + ": " + ex.Message;
+                    failedPosCodes.Add($"{posCode} ({lastError})");
+                }
+            }
+
+            // Başarısız kasa varsa uyarı göster
+            if (failedPosCodes.Count > 0)
+            {
+                var warningMsg = $"UYARI: Aşağıdaki kasalardan veri alınamadı:\n{string.Join("\n", failedPosCodes)}\n\nDevam etmek istiyor musunuz?";
+                HELPER.LOGYAZ(warningMsg, null);
+                var result = MessageBox.Show(warningMsg, "API Veri Alma Hatası", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (result == DialogResult.No)
+                {
+                    throw new Exception("Kullanıcı tarafından iptal edildi - Eksik kasa verileri");
                 }
             }
 
@@ -604,14 +660,16 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                 if (dt.Rows.Count > 0) return Convert.ToString(dt.Rows[0][0], CultureInfo.InvariantCulture);
             }
             catch { }
-            return "120.YKF";
+            return "";
         }
 
         // Push a single sale into Logo (keeps your existing helper semantics)
         private void PostSaleToLogo(BmsMarkeRGeniusIntegrationLibrary.HELPER.Data sale, string branch, bool withCustomer)
         {
+            string logPrefix = $"[PostSaleToLogo] PosDocId={sale?.posDocumentId}, DocNo={sale?.documentNo ?? sale?.receiptNo}";
             try
             {
+                HELPER.LOGYAZ($"{logPrefix} BAŞLADI - Branch={branch}, WithCustomer={withCustomer}, PosCode={sale?.posCode}, Total={sale?.total}, DocType={sale?.documentType}", null);
 
                 var header = new Bms_Fiche_Header
                 {
@@ -621,48 +679,72 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                     POS = int.TryParse(sale.posCode, out var p) ? p : 0,
                     DOCUMENT_NO = !string.IsNullOrWhiteSpace(sale.documentNo) ? sale.documentNo : sale.receiptNo,
                     CUSTOMER_CODE = withCustomer ? ResolveDefaultCustomer(sale) : null,
-                    FTYPE = (sale.documentType == 2 || sale.total < 0) ? "IADE" : "SATIS",
-                
+                    FTYPE = (sale.documentType == 2 || sale.documentType == 3 || sale.total < 0) ? "IADE" : "SATIS",
                 };
-               
+
+                HELPER.LOGYAZ($"{logPrefix} Header oluşturuldu - FTYPE={header.FTYPE}, BRANCH={header.BRANCH}, POS={header.POS}", null);
+
                 var details = new List<Bms_Fiche_Detail>();
+                decimal totalLineAmount = 0;
+                decimal totalDiscount = 0;
+                int lineCount = 0;
+
                 foreach (var l in sale.lines ?? new List<BmsMarkeRGeniusIntegrationLibrary.HELPER.Line>())
                 {
-            
-                   
+                    // TotalPrice zaten indirimli fiyat (373K TL)
+                    // İndirimli toplam gönderiyoruz, indirim alanını sıfırlıyoruz
                     var lineTotal = l.TotalPrice;
                     var price = lineTotal;
+                    var discount = 0m; // İndirim zaten TotalPrice'a yansımış, tekrar çıkarmıyoruz
 
                     details.Add(new Bms_Fiche_Detail
                     {
-                      
                         ITEMCODE = l.productCode,
                         ITEMUNIT = string.IsNullOrWhiteSpace(l.productUnit) ? "ADET" : l.productUnit,
                         QUANTITY = l.amount,
                         PRICE = price,
                         LINETOTAL = lineTotal,
-                        DISCOUNT_TOTAL = Convert.ToDecimal(l.discountTotal),
+                        DISCOUNT_TOTAL = discount,
                         SALESMAN = l.salesmanCode
                     });
+
+                    totalLineAmount += lineTotal;
+                    totalDiscount += discount;
+                    lineCount++;
                 }
 
-                if (sale.posCode == "4") {
-                    var res2 = HELPER.InsertReturnInvoice("120.YKF", branch, header, details, withCustomer: withCustomer, FIRMNR: CFG.FIRMNR, "BMS-NCR");
-                    if (!string.Equals(res2, "ok", StringComparison.OrdinalIgnoreCase))
-                        HELPER.LOGYAZ($"Logo post failed for {header.DOCUMENT_NO}: {res2}", null);
-                    return;
-                }
-                var res = header.FTYPE == "SATIS"
-                    ? InsertInvoice2("120.YKF", branch, header, details, withCustomer: withCustomer, FIRMNR: CFG.FIRMNR)
-                    : HELPER.InsertReturnInvoice("120.YKF", branch, header, details, withCustomer: withCustomer, FIRMNR: CFG.FIRMNR,"BMS-NCR");
+                HELPER.LOGYAZ($"{logPrefix} Satırlar oluşturuldu - LineCount={lineCount}, TotalLineAmount={totalLineAmount:N2}, TotalDiscount={totalDiscount:N2}, NetAmount={totalLineAmount - totalDiscount:N2}", null);
 
-                if (!string.Equals(res, "ok", StringComparison.OrdinalIgnoreCase))
-                    HELPER.LOGYAZ($"Logo post failed for {header.DOCUMENT_NO}: {res}", null);
+                string res;
+                if (sale.posCode == "4")
+                {
+                    HELPER.LOGYAZ($"{logPrefix} Kasa 4 - InsertReturnInvoice çağrılıyor", null);
+                    res = HELPER.InsertReturnInvoice("120.YKF", branch, header, details, withCustomer: withCustomer, FIRMNR: CFG.FIRMNR, "BMS-NCR");
+                }
+                else if (header.FTYPE == "SATIS")
+                {
+                    HELPER.LOGYAZ($"{logPrefix} SATIS - InsertInvoice2 çağrılıyor", null);
+                    res = InsertInvoice2("120.YKF", branch, header, details, withCustomer: withCustomer, FIRMNR: CFG.FIRMNR);
+                }
+                else
+                {
+                    HELPER.LOGYAZ($"{logPrefix} IADE - InsertReturnInvoice çağrılıyor", null);
+                    res = HELPER.InsertReturnInvoice("120.YKF", branch, header, details, withCustomer: withCustomer, FIRMNR: CFG.FIRMNR, "BMS-NCR");
+                }
+
+                if (string.Equals(res, "ok", StringComparison.OrdinalIgnoreCase))
+                {
+                    HELPER.LOGYAZ($"{logPrefix} BAŞARILI - Logo'ya aktarıldı", null);
+                }
+                else
+                {
+                    HELPER.LOGYAZ($"{logPrefix} HATA - Logo yanıtı: {res}", null);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString());
-                HELPER.LOGYAZ(ex.ToString(), null);
+                HELPER.LOGYAZ($"{logPrefix} EXCEPTION: {ex.Message}", ex);
+                MessageBox.Show($"PostSaleToLogo Hatası:\n{ex.Message}\n\nDetay için log dosyasına bakın.");
             }
         }
 
@@ -682,12 +764,16 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
 
         private void SalesNCR(List<Bms_Errors> errorList, string branch, string sqlFormattedDateStart, string sqlFormattedDateEnd)
         {
+            HELPER.LOGYAZ($"[SalesNCR] BAŞLADI - Branch={branch}, DateStart={sqlFormattedDateStart}, DateEnd={sqlFormattedDateEnd}", null);
             try
             {
                 var start = DateTime.Parse(sqlFormattedDateStart, CultureInfo.InvariantCulture);
                 var end = DateTime.Parse(sqlFormattedDateEnd, CultureInfo.InvariantCulture);
 
+                HELPER.LOGYAZ($"[SalesNCR] API'den veri çekiliyor...", null);
                 var all = PullSalesFromApi();
+                HELPER.LOGYAZ($"[SalesNCR] API'den toplam {all?.Count ?? 0} kayıt alındı", null);
+
                 var filtered = all
                     .Where(s => s.date >= start && s.date <= end)
                     .Where(s => ResolveLogoBranch(s.storeCode) == branch)
@@ -695,26 +781,46 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                     .Where(s => string.IsNullOrWhiteSpace(s.customerData?.code))
                     .ToList();
 
-                foreach (var sale in filtered)
-                    PostSaleToLogo(sale, branch, withCustomer: false);
+                decimal filteredTotal = filtered.Sum(s => Convert.ToDecimal(s.total));
+                HELPER.LOGYAZ($"[SalesNCR] Filtreleme sonrası: {filtered.Count} kayıt, Toplam={filteredTotal:N2} TL", null);
 
+                int successCount = 0;
+                int errorCount = 0;
+                foreach (var sale in filtered)
+                {
+                    try
+                    {
+                        PostSaleToLogo(sale, branch, withCustomer: false);
+                        successCount++;
+                    }
+                    catch (Exception exSale)
+                    {
+                        errorCount++;
+                        HELPER.LOGYAZ($"[SalesNCR] Satış aktarım hatası PosDocId={sale.posDocumentId}: {exSale.Message}", exSale);
+                    }
+                }
+
+                HELPER.LOGYAZ($"[SalesNCR] TAMAMLANDI - Başarılı={successCount}, Hatalı={errorCount}", null);
             }
             catch (Exception ex)
             {
-                HELPER.LOGYAZ(ex.ToString(), null);
+                HELPER.LOGYAZ($"[SalesNCR] EXCEPTION: {ex.Message}", ex);
             }
         }
 
 
         private void Sales_WithCustomerNCR(List<Bms_Errors> errorList, string branch, string sqlFormattedDateStart, string sqlFormattedDateEnd)
         {
+            HELPER.LOGYAZ($"[Sales_WithCustomerNCR] BAŞLADI - Branch={branch}, DateStart={sqlFormattedDateStart}, DateEnd={sqlFormattedDateEnd}", null);
             try
             {
-               
                 var start = DateTime.Parse(sqlFormattedDateStart, CultureInfo.InvariantCulture);
                 var end = DateTime.Parse(sqlFormattedDateEnd, CultureInfo.InvariantCulture);
 
+                HELPER.LOGYAZ($"[Sales_WithCustomerNCR] API'den veri çekiliyor...", null);
                 var all = PullSalesFromApi();
+                HELPER.LOGYAZ($"[Sales_WithCustomerNCR] API'den toplam {all?.Count ?? 0} kayıt alındı", null);
+
                 var filtered = all
                   //  .Where(s => s.date >= start && s.date <= end)
                   //  .Where(s => ResolveLogoBranch(s.storeCode) == branch)
@@ -722,13 +828,30 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                    // .Where(s => !string.IsNullOrWhiteSpace(s.customerData?.code))
                     .ToList();
 
-                foreach (var sale in all)
-                    PostSaleToLogo(sale, branch, withCustomer: true);
+                decimal allTotal = all.Sum(s => Convert.ToDecimal(s.total));
+                HELPER.LOGYAZ($"[Sales_WithCustomerNCR] Aktarılacak: {all.Count} kayıt, Toplam={allTotal:N2} TL", null);
 
+                int successCount = 0;
+                int errorCount = 0;
+                foreach (var sale in all)
+                {
+                    try
+                    {
+                        PostSaleToLogo(sale, branch, withCustomer: true);
+                        successCount++;
+                    }
+                    catch (Exception exSale)
+                    {
+                        errorCount++;
+                        HELPER.LOGYAZ($"[Sales_WithCustomerNCR] Satış aktarım hatası PosDocId={sale.posDocumentId}: {exSale.Message}", exSale);
+                    }
+                }
+
+                HELPER.LOGYAZ($"[Sales_WithCustomerNCR] TAMAMLANDI - Başarılı={successCount}, Hatalı={errorCount}", null);
             }
-            catch(Exception ex) {
-                HELPER.LOGYAZ(ex.ToString(), null);
-            
+            catch(Exception ex)
+            {
+                HELPER.LOGYAZ($"[Sales_WithCustomerNCR] EXCEPTION: {ex.Message}", ex);
             }
         }
 
@@ -843,7 +966,124 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
                 GC.Collect();
             }
         }
+        private void existenceControllerNCR(List<object> checkedBranches, string sqlFormattedDateStart, string sqlFormattedDateEnd)
+        {
+            List<Bms_Errors> errorList = new List<Bms_Errors>();
+            foreach (string branch in checkedBranches)
+            {
+                //from sqlFormattedDateStart to sqlFormattedDateEnd control if exists
+                for (DateTime date = de_DateStart.DateTime; date <= de_DateEnd.DateTime; date = date.AddDays(1))
+                {
+                    string sqlFormattedDate = date.ToString("MM/dd/yyyy") + " 00:00:00";
+                    {
+                        string sqlQueryHeader = $@"SELECT FICHENO FROM LG_{CFG.FIRMNR}_01_INVOICE II WHERE II.TIME_=0 AND II.POSTRANSFERINFO=1 AND II.CYPHCODE='BMS' AND II.DATE_ = '{sqlFormattedDate}' AND II.BRANCH = {branch}";
+                        DataTable fhl = HELPER.SqlSelectLogo(sqlQueryHeader);
 
+                        if (fhl.Rows.Count > 0)
+                        {
+                            var ficheNos = fhl.AsEnumerable().Select(r => r.Field<string>("FICHENO")).ToList();
+                            errorList.Add(new Bms_Errors()
+                            {
+                                BRANCH = int.Parse(branch),
+                                POS = 0,
+                                FTYPE = "",
+                                DATE_ = date,
+                                ERRORMESSAGE = "Bu tarih için daha önce günsonu yapılmıştır. Logo Fatura Noları : " + string.Join(",", ficheNos)
+                            });
+                        }
+                    }
+                    {
+                        string wherePos = $@"(SELECT DISTINCT CAST(GP.NR AS VARCHAR) AS NR FROM BMS_{CFG.FIRMNR}_MarkeRGenius_GeniusPos GP WITH(NOLOCK) )";
+                        string sqlQueryPayments = $@"SELECT TOP 1 LOGICALREF FROM LG_{CFG.FIRMNR}_01_CSROLL WITH(NOLOCK)  WHERE CYPHCODE='BMS' AND DATE_ = '{sqlFormattedDate}' AND BRANCH = {branch} AND SPECODE IN ({wherePos})
+UNION ALL
+SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_CLFICHE WITH(NOLOCK)  WHERE CYPHCODE='BMS' AND DATE_ = '{sqlFormattedDate}' AND BRANCH = {branch} AND SPECCODE IN ({wherePos})
+UNION ALL
+SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='BMS' AND DATE_ = '{sqlFormattedDate}' AND BRANCH = {branch} AND SPECODE IN ({wherePos})";
+                        DataTable fhl = HELPER.SqlSelectLogo(sqlQueryPayments);
+
+
+                        if (fhl.Rows.Count > 0)
+                        {
+                            var logicalRefs = fhl.AsEnumerable().Select(r => r.Field<int>("LOGICALREF")).ToList();
+                            errorList.Add(new Bms_Errors()
+                            {
+                                BRANCH = int.Parse(branch),
+                                POS = 0,
+                                FTYPE = "",
+                                DATE_ = date,
+                                ERRORMESSAGE = "Bu tarih için daha önce tahsilat yapılmıştır. Logo Referans Noları : " + string.Join(",", logicalRefs)
+                            });
+                        }
+                    }
+                    {//GENIUS CARI KONTROL
+                        string viewName = $@"Bms_{CFG.FIRMNR}_MarkeRGeniusIntegration_Control_Client";
+                        string sqlQuery = $@"SELECT KOD,AD FROM {viewName}";
+                        DataTable fhl = HELPER.SqlSelectLogo(sqlQuery);
+                        if (fhl.Rows.Count == 0)
+                        {
+                            foreach (DataRow item in fhl.Rows)
+                            {
+                                string KOD = item["KOD"].ToString();
+                                string AD = item["AD"].ToString();
+                                errorList.Add(new Bms_Errors()
+                                {
+                                    BRANCH = int.Parse(branch),
+                                    POS = 0,
+                                    FTYPE = "",
+                                    DATE_ = date,
+                                    ERRORMESSAGE = "Cari Logoda Bulunamadı : " + KOD + " - " + AD
+                                });
+                            }
+                        }
+
+                    }
+                    {//GENIUS URUN KONTROL
+                        string viewName = $@"Bms_{CFG.FIRMNR}_MarkeRGeniusIntegration_Control_Items";
+                        string sqlQuery = $@"SELECT KOD,AD FROM {viewName}";
+                        DataTable fhl = HELPER.SqlSelectLogo(sqlQuery);
+                        if (fhl.Rows.Count == 0)
+                        {
+                            foreach (DataRow item in fhl.Rows)
+                            {
+                                string KOD = item["KOD"].ToString();
+                                string AD = item["AD"].ToString();
+                                errorList.Add(new Bms_Errors()
+                                {
+                                    BRANCH = int.Parse(branch),
+                                    POS = 0,
+                                    FTYPE = "",
+                                    DATE_ = date,
+                                    ERRORMESSAGE = "Ürün Logoda Bulunamadı : " + KOD + " - " + AD
+                                });
+                            }
+                        }
+                    }
+                    {//GENIUS SATISELEMANI KONTROL
+                        string viewName = $@"Bms_{CFG.FIRMNR}_MarkeRGeniusIntegration_Control_Salesman";
+                        string sqlQuery = $@"SELECT KOD,AD FROM {viewName}";
+                        DataTable fhl = HELPER.SqlSelectLogo(sqlQuery);
+                        if (fhl.Rows.Count == 0)
+                        {
+                            foreach (DataRow item in fhl.Rows)
+                            {
+                                string KOD = item["KOD"].ToString();
+                                string AD = item["AD"].ToString();
+                                errorList.Add(new Bms_Errors()
+                                {
+                                    BRANCH = int.Parse(branch),
+                                    POS = 0,
+                                    FTYPE = "",
+                                    DATE_ = date,
+                                    ERRORMESSAGE = "Satış Elemanı Logoda Bulunamadı : " + KOD + " - " + AD
+                                });
+                            }
+                        }
+
+                    }
+                }
+            }
+           
+        }
         private void existenceController(List<object> checkedBranches, string sqlFormattedDateStart, string sqlFormattedDateEnd)
         {
             List<Bms_Errors> errorList = new List<Bms_Errors>();
@@ -1208,7 +1448,7 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
             {
                 _log = log;
                 _firmNr = /* CFG.FIRMNR */ "125";
-                _defaultArpForCash = /* config/DB */ "120.YKF";
+                _defaultArpForCash = /* config/DB */ "";
             }
 
             public async Task HandleAsync(BmsMarkeRGeniusIntegrationLibrary.HELPER.Data sale, CancellationToken ct)
@@ -1292,7 +1532,11 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
         public static string InsertInvoice2(string CARI_KOD, string BRANCH, Bms_Fiche_Header _BASLIK, List<Bms_Fiche_Detail> _DETAILS, bool withCustomer, string FIRMNR)
         {
             bool isCustomerExist = false;
-            try { isCustomerExist = Convert.ToBoolean(SqlSelectLogo($"SELECT COUNT(*) FROM LG_{FIRMNR}_CLCARD WHERE CODE='{_BASLIK.CUSTOMER_CODE}'").Rows[0][0]); } catch (Exception ex) { MessageBox.Show("Müşteri hatası!"); }
+            try { isCustomerExist = Convert.ToBoolean(SqlSelectLogo($"SELECT COUNT(*) FROM LG_{FIRMNR}_CLCARD WHERE CODE='{_BASLIK.CUSTOMER_CODE}'").Rows[0][0]); } 
+            catch (Exception ex) {
+                LOGYAZ($"Müşteri Hatası \n Ürün: {_BASLIK.CUSTOMER_CODE} \n Ex: {ex.Message.ToString()}", null);
+
+            }
             if (!isCustomerExist)
                 _BASLIK.CUSTOMER_CODE = _BASLIK.CUSTOMER_CODE.TrimStart('0');
          
@@ -1354,19 +1598,43 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
                 UnityObjects.Lines transactions_lines = invoice.DataFields.FieldByName("TRANSACTIONS").Lines;
                 foreach (var line in _DETAILS)
                 {
-                    HELPER.LOGYAZ(line.ITEMCODE, null);
                     if (string.IsNullOrEmpty(line.ITEMCODE))
                         throw new Exception("Ürün kodu bulunamadı tarih:" + _BASLIK.DATE_.ToString() + " pos:" + _BASLIK.POS.ToString());
                     transactions_lines.AppendLine();
                     double VatRate = 0;
-                    try { VatRate = double.Parse(HELPER.SqlSelectLogo($"SELECT VAT FROM LG_{FIRMNR}_ITEMS WITH(NOLOCK) WHERE CODE='" + line.ITEMCODE + "'").Rows[0][0].ToString()); } catch (Exception ex) { MessageBox.Show("VAT HATASI"); }
+                    try
+                    {
+                        var vatResult = HELPER.SqlSelectLogo($"SELECT VAT FROM LG_{FIRMNR}_ITEMS WITH(NOLOCK) WHERE CODE='" + line.ITEMCODE + "'");
+                        if (vatResult != null && vatResult.Rows.Count > 0 && vatResult.Rows[0][0] != DBNull.Value)
+                        {
+                            VatRate = double.Parse(vatResult.Rows[0][0].ToString());
+                            if (double.IsNaN(VatRate) || double.IsInfinity(VatRate))
+                                VatRate = 0;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        HELPER.LOGYAZ($"InsertInvoice2 - VAT HATASI: ITEMCODE={line.ITEMCODE}, Error={ex.Message}", null);
+                    }
 
 
                     double priceFromDecmailToDouble = 0;
-                    try { priceFromDecmailToDouble = Convert.ToDouble(line.PRICE.ToString().Replace(".", ",")); } catch { }
+                    try
+                    {
+                        priceFromDecmailToDouble = Convert.ToDouble(line.PRICE.ToString().Replace(".", ","));
+                        if (double.IsNaN(priceFromDecmailToDouble) || double.IsInfinity(priceFromDecmailToDouble))
+                            priceFromDecmailToDouble = 0;
+                    }
+                    catch { }
 
                     double linetotalFromDecmailToDouble = 0;
-                    try { linetotalFromDecmailToDouble = Convert.ToDouble(line.LINETOTAL.ToString().Replace(".", ",")); } catch { }
+                    try
+                    {
+                        linetotalFromDecmailToDouble = Convert.ToDouble(line.LINETOTAL.ToString().Replace(".", ","));
+                        if (double.IsNaN(linetotalFromDecmailToDouble) || double.IsInfinity(linetotalFromDecmailToDouble))
+                            linetotalFromDecmailToDouble = 0;
+                    }
+                    catch { }
 
                     //    double calculatedPrice = 1;
 
@@ -1384,14 +1652,32 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
 
                     transactions_lines[transactions_lines.Count - 1].FieldByName("TYPE").Value = 0;
                     transactions_lines[transactions_lines.Count - 1].FieldByName("MASTER_CODE").Value = line.ITEMCODE;
-                    transactions_lines[transactions_lines.Count - 1].FieldByName("QUANTITY").Value = line.QUANTITY == 0 ? 1 : line.QUANTITY;
 
-                    double lqcalc = line.QUANTITY == 0 ? 1 : line.QUANTITY;
+                    // QUANTITY için NaN/Infinity kontrolü
+                    double safeQuantity = (double)line.QUANTITY;
+                    if (double.IsNaN(safeQuantity) || double.IsInfinity(safeQuantity) || safeQuantity == 0)
+                    {
+                        if (safeQuantity != 0)
+                            HELPER.LOGYAZ($"InsertInvoice2 - Geçersiz QUANTITY değeri: QUANTITY={line.QUANTITY}, ITEMCODE={line.ITEMCODE}", null);
+                        safeQuantity = 1;
+                    }
+
+                    transactions_lines[transactions_lines.Count - 1].FieldByName("QUANTITY").Value = safeQuantity;
+
+                    double lqcalc = safeQuantity;
+
+                    double calculatedPrice = (double)line.PRICE / lqcalc;
+                    // NaN veya Infinity kontrolü
+                    if (double.IsNaN(calculatedPrice) || double.IsInfinity(calculatedPrice))
+                    {
+                        HELPER.LOGYAZ($"InsertInvoice2 - Geçersiz PRICE değeri: PRICE={line.PRICE}, QUANTITY={lqcalc}, ITEMCODE={line.ITEMCODE}", null);
+                        calculatedPrice = 0;
+                    }
 
                     if (Math.Abs(line.DISCOUNT_TOTAL) > 0)
-                        transactions_lines[transactions_lines.Count - 1].FieldByName("PRICE").Value = (double)line.PRICE / lqcalc;
+                        transactions_lines[transactions_lines.Count - 1].FieldByName("PRICE").Value = calculatedPrice;
                     else
-                        transactions_lines[transactions_lines.Count - 1].FieldByName("PRICE").Value = (double)line.PRICE / lqcalc;
+                        transactions_lines[transactions_lines.Count - 1].FieldByName("PRICE").Value = calculatedPrice;
 
 
 
@@ -1443,7 +1729,16 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
                         //vatRateFixed 
 
                         //discountFromDecmailToDouble = discountFromDecmailToDouble * (VatRate / 100 + 1);
-                        discountFromDecmailToDouble = discountFromDecmailToDouble / ((100 + VatRate) / 100);
+                        double vatDivisor = (100 + VatRate) / 100;
+                        if (vatDivisor != 0)
+                            discountFromDecmailToDouble = discountFromDecmailToDouble / vatDivisor;
+
+                        // NaN veya Infinity kontrolü
+                        if (double.IsNaN(discountFromDecmailToDouble) || double.IsInfinity(discountFromDecmailToDouble))
+                        {
+                            HELPER.LOGYAZ($"InsertInvoice2 - Geçersiz DISCOUNT değeri: DISCOUNT_TOTAL={line.DISCOUNT_TOTAL}, VatRate={VatRate}, ITEMCODE={line.ITEMCODE}", null);
+                            discountFromDecmailToDouble = 0;
+                        }
                         transactions_lines.AppendLine();
                         transactions_lines[transactions_lines.Count - 1].FieldByName("TYPE").Value = 2;
                         //transactions_lines[transactions_lines.Count - 1].FieldByName("DETAIL_LEVEL").Value = 1;
@@ -1821,7 +2116,7 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
                 catch { /* fallback */ }
 
                 // Son çare: kurum içi varsayılan
-                return "120.YKF";
+                return "";
             }
         }
 
@@ -1960,10 +2255,93 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
 
             if (!onlyPayments && !withoutControl)
             {
-                try { existenceController(branches, sqlFormattedDateStart, sqlFormattedDateEnd); } catch { /* pre-check hatası süreci bloklamasın */ }
+                try { existenceControllerNCR(branches, sqlFormattedDateStart, sqlFormattedDateEnd); } catch { /* pre-check hatası süreci bloklamasın */ }
             }
 
-       
+            // ========== API TOPLAM KONTROLÜ ==========
+            // Aktarım öncesi API'den toplam tutarı hesapla
+            decimal apiTotalAmount = 0;
+            decimal apiTotalDiscount = 0;
+            int apiRecordCount = 0;
+            decimal apiIadeToplam = 0;
+            int apiIadeAdet = 0;
+            decimal apiSatisBrut = 0;
+            decimal apiNetSatis = 0;
+            int apiSatisAdet = 0;
+            decimal apiBrutToplam = 0;
+            try
+            {
+                SplashScreenManager.Default.SetWaitFormDescription("API'den veri kontrol ediliyor...");
+                var allSalesForCheck = PullSalesFromApi();
+                var start = DateTime.Parse(sqlFormattedDateStart, CultureInfo.InvariantCulture);
+                var end = DateTime.Parse(sqlFormattedDateEnd, CultureInfo.InvariantCulture);
+
+                foreach (var sale in allSalesForCheck.Where(s => s.date >= start && s.date <= end))
+                {
+                    apiRecordCount++;
+
+                    // Satır bazında toplamları hesapla (Logo ile aynı hesaplama)
+                    decimal saleToplam = 0;
+                    if (sale.lines != null)
+                    {
+                        foreach (var line in sale.lines)
+                        {
+                            saleToplam += Convert.ToDecimal(line.TotalPrice);
+                            apiTotalDiscount += Convert.ToDecimal(line.discountTotal);
+                        }
+                    }
+
+                    // İade kontrolü (documentType=2 veya 3, posCode=4 veya total<0)
+                    bool isIade = sale.documentType == 2 || sale.documentType == 3 || sale.posCode == "4" || sale.total < 0;
+                    if (isIade)
+                    {
+                        apiIadeToplam += saleToplam;
+                        apiIadeAdet++;
+                    }
+
+                    apiTotalAmount += saleToplam;
+                }
+
+                // apiTotalAmount = TotalPrice toplamı (indirimli fiyat: 373.408 TL)
+                // apiTotalDiscount = İndirim toplamı (49.044 TL)
+                // Brüt = (TotalPrice + Discount) - İade (indirimsiz, iade hariç)
+                apiBrutToplam = (apiTotalAmount + apiTotalDiscount) - apiIadeToplam;
+                // Satış Brüt (iade hariç)
+                apiSatisBrut = apiTotalAmount - apiIadeToplam;
+                // Logo'ya giden = TotalPrice (indirimli: 373.408 TL)
+                apiNetSatis = apiSatisBrut;
+                apiSatisAdet = apiRecordCount - apiIadeAdet;
+
+                HELPER.LOGYAZ($"API KONTROL - Tarih: {sqlFormattedDateStart} - {sqlFormattedDateEnd}, Kayıt: {apiRecordCount}, Brüt: {apiBrutToplam:N2}, İndirim: {apiTotalDiscount:N2}, Logo'yaGiden: {apiNetSatis:N2}", null);
+
+                // Kullanıcıya göster ve onay al
+                var confirmMsg = $"API'den alınan veriler:\n\n" +
+                                $"Tarih Aralığı: {start:dd.MM.yyyy} - {end:dd.MM.yyyy}\n" +
+                                $"Satış Adedi: {apiSatisAdet}\n" +
+                                $"İade Adedi: {apiIadeAdet}\n" +
+                                $"Brüt Toplam: {apiBrutToplam:N2} TL\n" +
+                                $"İndirim: -{apiTotalDiscount:N2} TL\n" +
+                                $"İade Tutar: -{apiIadeToplam:N2} TL\n" +
+                                $"Logo'ya Giden: {apiNetSatis:N2} TL\n\n" +
+                                $"Bu verileri Logo'ya aktarmak istiyor musunuz?";
+
+                //   var confirmResult = MessageBox.Show(confirmMsg, "API Veri Kontrolü", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                ////  if (confirmResult == DialogResult.No)
+                //    {
+                //    throw new Exception("Kullanıcı aktarımı iptal etti");
+                //  }
+            }
+            catch (Exception ex) when (!ex.Message.Contains("iptal"))
+            {
+                HELPER.LOGYAZ($"API Kontrol Hatası: {ex.Message}", null);
+                var continueResult = MessageBox.Show(
+                    $"API kontrol sırasında hata oluştu:\n{ex.Message}\n\nYine de devam etmek istiyor musunuz?",
+                    "Kontrol Hatası", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (continueResult == DialogResult.No)
+                    throw;
+            }
+            // ========== API TOPLAM KONTROLÜ SONU ==========
+
             var sum = new RunSummary();
 
             var loginErr = HELPER.LOGO_LOGIN(CFG.LOBJECTDEFAULTUSERNAME, CFG.LOBJECTDEFAULTPASSWORD, int.Parse(CFG.FIRMNR));
@@ -2014,6 +2392,117 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
 
             // >>> Eski davranışa geri dön: hata varsa formu aç, yoksa başarı göster
             SplashScreenManager.CloseForm(false);
+
+            // ========== LOGO TOPLAM DOĞRULAMA ==========
+            HELPER.LOGYAZ($"[DOĞRULAMA] Logo doğrulama başlıyor...", null);
+            decimal logoGrossTotal = 0;
+            decimal logoNetTotal = 0;
+            int logoInvoiceCount = 0;
+            try
+            {
+                // Logo'dan aktarılan faturaların toplamını çek
+                string branchList = string.Join(",", branches.Cast<string>());
+                // Tarih formatını düzelt - yyyy-MM-dd formatına çevir
+                var startDate = DateTime.Parse(sqlFormattedDateStart, CultureInfo.InvariantCulture);
+                var endDate = DateTime.Parse(sqlFormattedDateEnd, CultureInfo.InvariantCulture);
+                string dateStart = startDate.ToString("yyyy-MM-dd");
+                string dateEnd = endDate.ToString("yyyy-MM-dd");
+                string logoQuery = $@"
+                    SELECT COUNT(*) AS FaturaAdedi,
+                           ISNULL(SUM(GROSSTOTAL), 0) AS BrutToplam,
+                           ISNULL(SUM(NETTOTAL), 0) AS NetToplam
+                    FROM LG_{CFG.FIRMNR}_01_INVOICE WITH(NOLOCK)
+                    WHERE DATE_ BETWEEN '{dateStart} 00:00:00.000' AND '{dateEnd} 23:59:59.000'
+                    AND CYPHCODE = 'BMS-NCR'
+                    AND TRCODE IN (2, 7, 8)";  // 2=Satış İade, 7=Perakende Satış, 8=Perakende İade
+
+                HELPER.LOGYAZ($"[DOĞRULAMA] SQL Sorgusu: {logoQuery}", null);
+
+                var dtLogo = HELPER.SqlSelectLogo(logoQuery);
+                HELPER.LOGYAZ($"[DOĞRULAMA] SQL sonucu: {dtLogo?.Rows?.Count ?? 0} satır döndü", null);
+
+                if (dtLogo.Rows.Count > 0)
+                {
+                    logoInvoiceCount = Convert.ToInt32(dtLogo.Rows[0]["FaturaAdedi"]);
+                    logoGrossTotal = Convert.ToDecimal(dtLogo.Rows[0]["BrutToplam"]);
+                    logoNetTotal = Convert.ToDecimal(dtLogo.Rows[0]["NetToplam"]);
+                    HELPER.LOGYAZ($"[DOĞRULAMA] Logo verileri: Adet={logoInvoiceCount}, GrossTotal={logoGrossTotal:N2}, NetTotal={logoNetTotal:N2}", null);
+                }
+                else
+                {
+                    HELPER.LOGYAZ($"[DOĞRULAMA] UYARI: Logo'dan veri dönmedi!", null);
+                }
+
+                // Logo'dan iade tutarını ayrı çek (TRCODE=2 veya TRCODE=8)
+                decimal logoIadeToplam = 0;
+                int logoIadeAdet = 0;
+                string logoIadeQuery = $@"
+                    SELECT COUNT(*) AS IadeAdedi,
+                           ISNULL(SUM(NETTOTAL), 0) AS IadeToplam
+                    FROM LG_{CFG.FIRMNR}_01_INVOICE WITH(NOLOCK)
+                    WHERE DATE_ BETWEEN '{dateStart} 00:00:00.000' AND '{dateEnd} 23:59:59.000'
+                    AND CYPHCODE = 'BMS-NCR'
+                    AND TRCODE IN (2, 8)";  // 2=Satış İade, 8=Perakende İade
+
+                var dtLogoIade = HELPER.SqlSelectLogo(logoIadeQuery);
+                if (dtLogoIade.Rows.Count > 0)
+                {
+                    logoIadeAdet = Convert.ToInt32(dtLogoIade.Rows[0]["IadeAdedi"]);
+                    logoIadeToplam = Convert.ToDecimal(dtLogoIade.Rows[0]["IadeToplam"]);
+                }
+
+                int logoSatisAdet = logoInvoiceCount - logoIadeAdet;
+                // Logo'ya giden tutar (indirimli)
+                decimal logoGidenTutar = logoNetTotal - logoIadeToplam;
+
+                // API Brüt Toplam (TotalPrice + Discount) - aktarım öncesi hesaplandı: apiBrutToplam
+                // Fark hesapla - API Logo'ya Giden ile Logo Net Toplam karşılaştır
+                decimal fark = apiNetSatis - logoGidenTutar;
+                decimal farkYuzdesi = apiNetSatis != 0 ? Math.Abs(fark / apiNetSatis * 100) : 0;
+                int adetFark = apiSatisAdet - logoSatisAdet;
+
+                HELPER.LOGYAZ($"[DOĞRULAMA] API: Brüt={apiBrutToplam:N2}, İndirim={apiTotalDiscount:N2}, Logo'yaGiden={apiNetSatis:N2}", null);
+                HELPER.LOGYAZ($"[DOĞRULAMA] Logo: NetTotal={logoGidenTutar:N2}, İade={logoIadeToplam:N2}", null);
+                HELPER.LOGYAZ($"[DOĞRULAMA] FARK: Adet={adetFark}, Tutar={fark:N2} TL ({farkYuzdesi:N2}%)", null);
+
+                string dogrulamaMsg = $"========== AKTARIM DOĞRULAMA ==========\n\n" +
+                                     $"API'den Alınan:\n" +
+                                     $"  Satış Adedi: {apiSatisAdet}\n" +
+                                     $"  İade Adedi: {apiIadeAdet}\n" +
+                                     $"  Brüt Toplam: {apiBrutToplam:N2} TL\n" +
+                                     $"  İndirim: -{apiTotalDiscount:N2} TL\n" +
+                                     $"  İade Tutar: -{apiIadeToplam:N2} TL\n" +
+                                     $"  Logo'ya Giden: {apiNetSatis:N2} TL\n\n" +
+                                     $"Logo'ya Aktarılan:\n" +
+                                     $"  Satış Adedi: {logoSatisAdet}\n" +
+                                     $"  İade Adedi: {logoIadeAdet}\n" +
+                                     $"  İade Tutar: -{logoIadeToplam:N2} TL\n" +
+                                     $"  Net Toplam: {logoGidenTutar:N2} TL\n\n" +
+                                     $"KARŞILAŞTIRMA:\n" +
+                                     $"  Adet Farkı: {adetFark}\n" +
+                                     $"  Tutar Farkı: {fark:N2} TL ({farkYuzdesi:N2}%)\n\n";
+
+                if (Math.Abs(fark) > 1) // 1 TL'den fazla fark varsa uyar
+                {
+                    dogrulamaMsg += "⚠️ UYARI: API ve Logo tutarları arasında fark var!\n" +
+                                   "Lütfen kontrol edin.";
+                    HELPER.LOGYAZ($"[DOĞRULAMA] UYARI - Tutarlar uyuşmuyor!", null);
+                    XtraMessageBox.Show(dogrulamaMsg, "Aktarım Doğrulama - UYARI", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    dogrulamaMsg += "✓ Tutarlar uyuşuyor!";
+                    HELPER.LOGYAZ($"[DOĞRULAMA] BAŞARILI - Tutarlar uyuşuyor", null);
+                    XtraMessageBox.Show(dogrulamaMsg, "Aktarım Doğrulama - BAŞARILI", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception exVerify)
+            {
+                HELPER.LOGYAZ($"[DOĞRULAMA] EXCEPTION: {exVerify.Message}", exVerify);
+                XtraMessageBox.Show($"Logo doğrulama hatası:\n{exVerify.Message}", "Doğrulama Hatası", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            // ========== LOGO TOPLAM DOĞRULAMA SONU ==========
+
             if (errorList.Count > 0)
             {
                 XtraMessageBox.Show("İşlem hatalarla tamamlandı.", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -2285,15 +2774,8 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
                 var (errors, summary) = await Task.Run(() =>
                     RunSalesPaymentsDebtClose(sqlStart, sqlEnd, branches,
                                               onlyPayments, onlySalesWithCustomer, dontDebtClose, withoutControl));
-
                 SplashScreenManager.CloseForm(false);
 
-                if (errors.Count > 0)
-                {
-                    var dlg = new FRM_Errors(errors) { StartPosition = FormStartPosition.CenterParent };
-                    dlg.ShowDialog(this);
-                }
-            
             }
             catch (Exception ex)
             {

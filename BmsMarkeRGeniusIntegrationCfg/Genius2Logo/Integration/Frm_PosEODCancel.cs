@@ -391,12 +391,30 @@ SELECT LOGICALREF FROM LG_{CFG.FIRMNR}_01_KSLINES  WITH(NOLOCK) WHERE CYPHCODE='
 
         private void simpleButton1_Click(object sender, EventArgs e)
         {
-            string sqlFormattedDate = de_Date.DateTime.ToString("MM/dd/yyyy") + " 00:00:00";
-            string sqlQuery = $@"DELETE FROM LG_125_01_INVOICE WHERE CYPHCODE = 'BMS-NCR' AND DATE_ = '{sqlFormattedDate}'";
-            string sqlQuery2 = $@"DELETE FROM LG_125_01_STFICHE WHERE CYPHCODE = 'BMS-NCR' AND DATE_ = '{sqlFormattedDate}'";
+            try
+            {
+                string sqlFormattedDate = de_Date.DateTime.ToString("MM/dd/yyyy") + " 00:00:00";
+                string sqlQuery = $@"DELETE FROM LG_125_01_INVOICE WHERE CYPHCODE = 'BMS-NCR' AND DATE_ = '{sqlFormattedDate}'";
+                string sqlQuery2 = $@"DELETE FROM LG_125_01_STFICHE WHERE CYPHCODE = 'BMS-NCR' AND DATE_ = '{sqlFormattedDate}'";
+                SplashScreenManager.ShowForm(this, typeof(PROGRESSFORM), true, true, false);
+                SplashScreenManager.Default.SetWaitFormCaption("LÜTFEN BEKLEYİN.");
+                SplashScreenManager.Default.SetWaitFormDescription("");
+                HELPER.SqlDeleteCommand(sqlQuery, false, null);
+                HELPER.SqlDeleteCommand(sqlQuery2, false, null);
+                XtraMessageBox.Show("İşlem tamamlandı.", "Bilgi", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                XtraMessageBox.Show(ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                HELPER.LOGO_LOGOUT();
+            }
 
-            HELPER.SqlDeleteCommand(sqlQuery, false, null);
-            HELPER.SqlDeleteCommand(sqlQuery2, false, null);
+     
+            
+                
         }
     }
 }

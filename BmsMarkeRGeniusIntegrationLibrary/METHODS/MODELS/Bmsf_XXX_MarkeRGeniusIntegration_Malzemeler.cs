@@ -23,6 +23,9 @@ namespace BmsMarkeRGeniusIntegrationLibrary.METHODS.MODELS
         public int CYPHCODE { get; set; }
         public int ACTIVE { get; set; }
         public int VAT_CODE_N { get; set; }
+
+        public string GROUPID { get; set; }
+        public string GROUPINFO { get; set; }
         public string MARKCODE { get; set; }
 		public string SPECODE { get; set; }
 		public string SPECODE2 { get; set; }

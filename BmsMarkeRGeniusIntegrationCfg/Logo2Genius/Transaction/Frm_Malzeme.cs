@@ -414,7 +414,7 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
                     if (!seenCodes.Add(code))
                         continue;
 
-
+               
                     productsPayload.Add(new
                     {
                         id = 0,
@@ -443,9 +443,11 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
                         supplierCode = "",
                         supplierName = "",
 
-                        code1 = "",
-                        code1Id = 0,
-                        code1Name = item.SPECODE,
+          
+
+                        code1 = item.GROUPID,
+                        code1Id = item.GROUPID,
+                        code1Name = item.GROUPINFO,
                         code2 = "",
                         code2Id = 0,
                         code2Name = item.SPECODE2,
@@ -464,7 +466,7 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
                         priceEntryType = 1,
                         returnType = 1,
                         quantityType = 0,
-                        discountType = 0,
+                        discountType = 1,
                         scaleType = isKg ? 1 : 0,
 
                         // Mevcutta böyle kullanmışsın; API adını korudum
@@ -478,7 +480,7 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
                         productType = 0,
                         salesInformationsId = (int[])null,
                         maxQuantity = 0
-                    });
+                    }); 
                 }
                 else
                 {
