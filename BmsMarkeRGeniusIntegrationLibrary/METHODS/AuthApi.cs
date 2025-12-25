@@ -8,33 +8,50 @@ using System.Threading.Tasks;
 
 public static class AuthApi
 {
-    private static readonly HttpClient _http;
+    private static HttpClient _http;
+    private static string _baseUrl = "http://192.168.3.10:9996/";
 
     static AuthApi()
+    {
+        InitializeHttpClient();
+    }
+
+    private static void InitializeHttpClient()
     {
         // DEV: TLS/Proxy/CRL beklemelerini kır
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         ServicePointManager.Expect100Continue = false;
-        ServicePointManager.CheckCertificateRevocationList = false;  
+        ServicePointManager.CheckCertificateRevocationList = false;
         ServicePointManager.DefaultConnectionLimit = 100;
 
         var handler = new HttpClientHandler
         {
             UseProxy = false,
-            CheckCertificateRevocationList = false,                
+            CheckCertificateRevocationList = false,
             ServerCertificateCustomValidationCallback =
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         };
 
         _http = new HttpClient(handler)
         {
-            BaseAddress = new Uri("http://192.168.3.10:9996/"),
-            Timeout = Timeout.InfiniteTimeSpan 
+            BaseAddress = new Uri(_baseUrl),
+            Timeout = Timeout.InfiniteTimeSpan
         };
         _http.DefaultRequestHeaders.Accept.Clear();
         _http.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
     }
+
+    public static void SetBaseUrl(string baseUrl)
+    {
+        if (!string.IsNullOrEmpty(baseUrl) && baseUrl != _baseUrl)
+        {
+            _baseUrl = baseUrl;
+            InitializeHttpClient();
+        }
+    }
+
+    public static string GetBaseUrl() => _baseUrl;
 
 
     public static async Task<string> GetTokenAsync(

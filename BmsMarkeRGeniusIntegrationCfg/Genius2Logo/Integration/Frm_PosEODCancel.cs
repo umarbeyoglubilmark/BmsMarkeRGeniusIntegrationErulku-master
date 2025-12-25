@@ -32,6 +32,9 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
             //de_DateStart.DateTime = new DateTime(2023, 12, 26);
             //de_DateEnd.DateTime = new DateTime(2023, 12, 26);
             loadLookupEdits();
+            // NCR ve Genius buton görünürlükleri
+            simpleButton1.Visible = CFG.ISNCRACTIVE == "1";  // NCR Sil
+            sb_Cancel.Visible = CFG.ISGENIUSACTIVE == "1";  // Sil (Genius)
         }
 
         private void loadLookupEdits()

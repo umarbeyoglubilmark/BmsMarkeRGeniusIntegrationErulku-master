@@ -28,6 +28,11 @@ namespace BmsMarkeRGeniusIntegrationLibrary
         public string APIURL { get; set; } = string.Empty;
         public string APIUSERNAME { get; set; } = string.Empty;
         public string APIPASSWORD { get; set; } = string.Empty;
+        public string ISNCRACTIVE { get; set; } = string.Empty;
+        public string ISGENIUSACTIVE { get; set; } = string.Empty;
+        public string NCRBASEURL { get; set; } = string.Empty;
+        public string NCRUSERNAME { get; set; } = string.Empty;
+        public string NCRPASSWORD { get; set; } = string.Empty;
     }
     public class CONFIG_HELPER
     {
@@ -73,6 +78,7 @@ namespace BmsMarkeRGeniusIntegrationLibrary
                 XmlNode xNodeUSERDEFAULTS = xNode[0].ChildNodes[2];
                 XmlNode xNodeOTHERDB = xNode[0].ChildNodes[3];
                 XmlNode xNodeAPI = xNode[0].ChildNodes[4];
+                XmlNode xNodeINTEGRATION = xNode[0].ChildNodes.Count > 5 ? xNode[0].ChildNodes[5] : null;
                 try { CFG.LGDBUSERNAME = xNodeLGDB.ChildNodes[0].InnerText; } catch { }
                 try { CFG.LGDBPASSWORD = xNodeLGDB.ChildNodes[1].InnerText; } catch { }
                 try { CFG.LGDBSERVER = xNodeLGDB.ChildNodes[2].InnerText; } catch { }
@@ -92,6 +98,14 @@ namespace BmsMarkeRGeniusIntegrationLibrary
                 try { CFG.APIURL = xNodeAPI.ChildNodes[0].InnerText; } catch { }
                 try { CFG.APIUSERNAME = xNodeAPI.ChildNodes[1].InnerText; } catch { }
                 try { CFG.APIPASSWORD = xNodeAPI.ChildNodes[2].InnerText; } catch { }
+                if (xNodeINTEGRATION != null)
+                {
+                    try { CFG.ISNCRACTIVE = xNodeINTEGRATION.ChildNodes[0].InnerText; } catch { }
+                    try { CFG.ISGENIUSACTIVE = xNodeINTEGRATION.ChildNodes[1].InnerText; } catch { }
+                    try { CFG.NCRBASEURL = xNodeINTEGRATION.ChildNodes[2].InnerText; } catch { }
+                    try { CFG.NCRUSERNAME = xNodeINTEGRATION.ChildNodes[3].InnerText; } catch { }
+                    try { CFG.NCRPASSWORD = xNodeINTEGRATION.ChildNodes[4].InnerText; } catch { }
+                }
                 return CFG;
             }
             catch

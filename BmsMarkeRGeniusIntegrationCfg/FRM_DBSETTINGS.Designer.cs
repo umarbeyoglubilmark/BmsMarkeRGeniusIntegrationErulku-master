@@ -82,6 +82,16 @@ namespace BmsMarkeRGeniusIntegrationCfg
             this.te_ApiUsername = new DevExpress.XtraEditors.TextEdit();
             this.labelControl19 = new DevExpress.XtraEditors.LabelControl();
             this.te_LogoDefaultBranchForGeniusSending = new DevExpress.XtraEditors.TextEdit();
+            this.groupBox6 = new System.Windows.Forms.GroupBox();
+            this.cb_NCRDevrede = new System.Windows.Forms.CheckBox();
+            this.cb_GeniusDevrede = new System.Windows.Forms.CheckBox();
+            this.groupBox7 = new System.Windows.Forms.GroupBox();
+            this.te_NcrBaseUrl = new DevExpress.XtraEditors.TextEdit();
+            this.te_NcrUsername = new DevExpress.XtraEditors.TextEdit();
+            this.te_NcrPassword = new DevExpress.XtraEditors.TextEdit();
+            this.labelControl20 = new DevExpress.XtraEditors.LabelControl();
+            this.labelControl21 = new DevExpress.XtraEditors.LabelControl();
+            this.labelControl22 = new DevExpress.XtraEditors.LabelControl();
             ((System.ComponentModel.ISupportInitialize)(this.tabbedView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.noDocumentsView1)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -109,6 +119,11 @@ namespace BmsMarkeRGeniusIntegrationCfg
             ((System.ComponentModel.ISupportInitialize)(this.te_ApiPassword.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.te_ApiUsername.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.te_LogoDefaultBranchForGeniusSending.Properties)).BeginInit();
+            this.groupBox6.SuspendLayout();
+            this.groupBox7.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.te_NcrBaseUrl.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.te_NcrUsername.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.te_NcrPassword.Properties)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -555,19 +570,114 @@ namespace BmsMarkeRGeniusIntegrationCfg
             this.labelControl19.Size = new System.Drawing.Size(153, 13);
             this.labelControl19.TabIndex = 45;
             this.labelControl19.Text = "IbmGeniusa Aktarım Vars. Isyeri";
-            // 
+            //
             // te_LogoDefaultBranchForGeniusSending
-            // 
+            //
             this.te_LogoDefaultBranchForGeniusSending.Location = new System.Drawing.Point(258, 63);
             this.te_LogoDefaultBranchForGeniusSending.Name = "te_LogoDefaultBranchForGeniusSending";
             this.te_LogoDefaultBranchForGeniusSending.Size = new System.Drawing.Size(65, 20);
             this.te_LogoDefaultBranchForGeniusSending.TabIndex = 44;
-            // 
+            //
+            // groupBox6
+            //
+            this.groupBox6.Controls.Add(this.cb_GeniusDevrede);
+            this.groupBox6.Controls.Add(this.cb_NCRDevrede);
+            this.groupBox6.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
+            this.groupBox6.Location = new System.Drawing.Point(347, 247);
+            this.groupBox6.Name = "groupBox6";
+            this.groupBox6.Size = new System.Drawing.Size(329, 56);
+            this.groupBox6.TabIndex = 6;
+            this.groupBox6.TabStop = false;
+            this.groupBox6.Text = "ENTEGRASYON AYARLARI";
+            //
+            // cb_NCRDevrede
+            //
+            this.cb_NCRDevrede.AutoSize = true;
+            this.cb_NCRDevrede.Location = new System.Drawing.Point(10, 24);
+            this.cb_NCRDevrede.Name = "cb_NCRDevrede";
+            this.cb_NCRDevrede.Size = new System.Drawing.Size(103, 17);
+            this.cb_NCRDevrede.TabIndex = 0;
+            this.cb_NCRDevrede.Text = "NCR Devrede";
+            this.cb_NCRDevrede.UseVisualStyleBackColor = true;
+            //
+            // cb_GeniusDevrede
+            //
+            this.cb_GeniusDevrede.AutoSize = true;
+            this.cb_GeniusDevrede.Location = new System.Drawing.Point(170, 24);
+            this.cb_GeniusDevrede.Name = "cb_GeniusDevrede";
+            this.cb_GeniusDevrede.Size = new System.Drawing.Size(103, 17);
+            this.cb_GeniusDevrede.TabIndex = 1;
+            this.cb_GeniusDevrede.Text = "Genius Devrede";
+            this.cb_GeniusDevrede.UseVisualStyleBackColor = true;
+            //
+            // groupBox7
+            //
+            this.groupBox7.Controls.Add(this.labelControl20);
+            this.groupBox7.Controls.Add(this.labelControl21);
+            this.groupBox7.Controls.Add(this.labelControl22);
+            this.groupBox7.Controls.Add(this.te_NcrBaseUrl);
+            this.groupBox7.Controls.Add(this.te_NcrUsername);
+            this.groupBox7.Controls.Add(this.te_NcrPassword);
+            this.groupBox7.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(162)));
+            this.groupBox7.Location = new System.Drawing.Point(347, 125);
+            this.groupBox7.Name = "groupBox7";
+            this.groupBox7.Size = new System.Drawing.Size(329, 116);
+            this.groupBox7.TabIndex = 7;
+            this.groupBox7.TabStop = false;
+            this.groupBox7.Text = "NCR API AYARLARI";
+            //
+            // labelControl20
+            //
+            this.labelControl20.Location = new System.Drawing.Point(4, 26);
+            this.labelControl20.Name = "labelControl20";
+            this.labelControl20.Size = new System.Drawing.Size(48, 13);
+            this.labelControl20.TabIndex = 34;
+            this.labelControl20.Text = "BASE URL";
+            //
+            // labelControl21
+            //
+            this.labelControl21.Location = new System.Drawing.Point(4, 46);
+            this.labelControl21.Name = "labelControl21";
+            this.labelControl21.Size = new System.Drawing.Size(73, 13);
+            this.labelControl21.TabIndex = 32;
+            this.labelControl21.Text = "KULLANICI ADI";
+            //
+            // labelControl22
+            //
+            this.labelControl22.Location = new System.Drawing.Point(4, 66);
+            this.labelControl22.Name = "labelControl22";
+            this.labelControl22.Size = new System.Drawing.Size(40, 13);
+            this.labelControl22.TabIndex = 33;
+            this.labelControl22.Text = "PAROLA";
+            //
+            // te_NcrBaseUrl
+            //
+            this.te_NcrBaseUrl.Location = new System.Drawing.Point(118, 23);
+            this.te_NcrBaseUrl.Name = "te_NcrBaseUrl";
+            this.te_NcrBaseUrl.Size = new System.Drawing.Size(209, 20);
+            this.te_NcrBaseUrl.TabIndex = 0;
+            //
+            // te_NcrUsername
+            //
+            this.te_NcrUsername.Location = new System.Drawing.Point(118, 43);
+            this.te_NcrUsername.Name = "te_NcrUsername";
+            this.te_NcrUsername.Size = new System.Drawing.Size(209, 20);
+            this.te_NcrUsername.TabIndex = 1;
+            //
+            // te_NcrPassword
+            //
+            this.te_NcrPassword.Location = new System.Drawing.Point(118, 63);
+            this.te_NcrPassword.Name = "te_NcrPassword";
+            this.te_NcrPassword.Size = new System.Drawing.Size(209, 20);
+            this.te_NcrPassword.TabIndex = 2;
+            //
             // FRM_DBSETTINGS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(697, 383);
+            this.ClientSize = new System.Drawing.Size(697, 500);
+            this.Controls.Add(this.groupBox7);
+            this.Controls.Add(this.groupBox6);
             this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.simpleButtonVAZGEC);
@@ -613,6 +723,13 @@ namespace BmsMarkeRGeniusIntegrationCfg
             ((System.ComponentModel.ISupportInitialize)(this.te_ApiPassword.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.te_ApiUsername.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.te_LogoDefaultBranchForGeniusSending.Properties)).EndInit();
+            this.groupBox6.ResumeLayout(false);
+            this.groupBox6.PerformLayout();
+            this.groupBox7.ResumeLayout(false);
+            this.groupBox7.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.te_NcrBaseUrl.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.te_NcrUsername.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.te_NcrPassword.Properties)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -671,5 +788,15 @@ namespace BmsMarkeRGeniusIntegrationCfg
         private System.Windows.Forms.RadioButton rb_FirmBasedCurr;
         private DevExpress.XtraEditors.LabelControl labelControl19;
         private DevExpress.XtraEditors.TextEdit te_LogoDefaultBranchForGeniusSending;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.CheckBox cb_NCRDevrede;
+        private System.Windows.Forms.CheckBox cb_GeniusDevrede;
+        private System.Windows.Forms.GroupBox groupBox7;
+        private DevExpress.XtraEditors.TextEdit te_NcrBaseUrl;
+        private DevExpress.XtraEditors.TextEdit te_NcrUsername;
+        private DevExpress.XtraEditors.TextEdit te_NcrPassword;
+        private DevExpress.XtraEditors.LabelControl labelControl20;
+        private DevExpress.XtraEditors.LabelControl labelControl21;
+        private DevExpress.XtraEditors.LabelControl labelControl22;
     }
 }

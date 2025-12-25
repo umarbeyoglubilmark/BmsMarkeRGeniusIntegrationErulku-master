@@ -40,6 +40,11 @@ namespace BmsMarkeRGeniusIntegrationCfg
                 try { te_ApiUrl.Text = CFG.APIURL; } catch { }
                 try { te_ApiUsername.Text = CFG.APIUSERNAME; } catch { }
                 try { te_ApiPassword.Text = CFG.APIPASSWORD; } catch { }
+                try { cb_NCRDevrede.Checked = CFG.ISNCRACTIVE == "1" ? true : false; } catch { }
+                try { cb_GeniusDevrede.Checked = CFG.ISGENIUSACTIVE == "1" ? true : false; } catch { }
+                try { te_NcrBaseUrl.Text = CFG.NCRBASEURL; } catch { }
+                try { te_NcrUsername.Text = CFG.NCRUSERNAME; } catch { }
+                try { te_NcrPassword.Text = CFG.NCRPASSWORD; } catch { }
             }
         }
 
@@ -73,11 +78,18 @@ namespace BmsMarkeRGeniusIntegrationCfg
                     "<OTHERPORT>" + te_OtherPort.Text + "</OTHERPORT>" +
                     "<OTHERDATABASE>" + te_OtherDb.Text + "</OTHERDATABASE>" +
                 "</OTHERSERVER>" +
-                "<ORION>" + //NODE 3 
+                "<ORION>" + //NODE 4
                     "<APIURL>" + te_ApiUrl.Text + "</APIURL>" +
                     "<APIUSERNAME>" + te_ApiUsername.Text + "</APIUSERNAME>" +
                     "<APIPASSWORD>" + te_ApiPassword.Text + "</APIPASSWORD>" +
                 "</ORION>" +
+                "<INTEGRATION>" + //NODE 5
+                    "<ISNCRACTIVE>" + (cb_NCRDevrede.Checked == true ? "1" : "0") + "</ISNCRACTIVE>" +
+                    "<ISGENIUSACTIVE>" + (cb_GeniusDevrede.Checked == true ? "1" : "0") + "</ISGENIUSACTIVE>" +
+                    "<NCRBASEURL>" + te_NcrBaseUrl.Text + "</NCRBASEURL>" +
+                    "<NCRUSERNAME>" + te_NcrUsername.Text + "</NCRUSERNAME>" +
+                    "<NCRPASSWORD>" + te_NcrPassword.Text + "</NCRPASSWORD>" +
+                "</INTEGRATION>" +
             "</BILMARKSOFTWARE>")));
 
             if (CONFIG_HELPER.EncryptFile(CONFIG_HELPER._xmlPath, CONFIG_HELPER._datPath, CONFIG_HELPER._key))

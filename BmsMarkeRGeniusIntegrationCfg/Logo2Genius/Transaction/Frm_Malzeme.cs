@@ -63,6 +63,11 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
             VALUETABLE = VALUETABLE.Replace("XXX", CFG.FIRMNR);
             InitializeGLE();
             //InitializeData(null, null);
+            // NCR ve Genius buton görünürlükleri
+            button1.Visible = CFG.ISNCRACTIVE == "1";  // NCR KAYDET
+            button2.Visible = CFG.ISGENIUSACTIVE == "1";  // GENIUS KAYDET
+            // Genius aktif değilse mağaza seçim alanını gizle
+            gb_Branch.Visible = CFG.ISGENIUSACTIVE == "1";
         }
 
         private void InitializeGLE()
@@ -83,7 +88,8 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
             SplashScreenManager.ShowForm(this, typeof(PROGRESSFORM), true, true, false);
             SplashScreenManager.Default.SetWaitFormCaption("LÜTFEN BEKLEYİN.");
             SplashScreenManager.Default.SetWaitFormDescription("");
-            string wh = gle_Value.EditValue.ToString();
+            string wh = gle_Value.EditValue?.ToString() ?? "0";
+            if (string.IsNullOrEmpty(wh)) wh = "0";
             if (!string.IsNullOrEmpty(CFG.DefaultBranchForGeniusSending))
                 wh = CFG.DefaultBranchForGeniusSending;
             string sqlFormattedDateStart = de_StartDate.DateTime.ToString("yyyy-MM-dd");
@@ -164,7 +170,8 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
 
         private void sb_Load_Click(object sender, EventArgs e)
         {
-            if (gle_Value.EditValue == null)
+            // Genius aktifse mağaza zorunlu, değilse zorunlu değil
+            if (CFG.ISGENIUSACTIVE == "1" && gle_Value.EditValue == null)
             {
                 XtraMessageBox.Show("Lütfen Değer Seçiniz", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -327,14 +334,15 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
 
             button1.Enabled = false;
             string globaltoken = "";
-            //    string globaltoken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoidXNlciIsInVuaXF1ZV9uYW1lIjoiZGVzdGVrQGVuY29yZS5jb20udHIiLCJuYW1laWQiOiIxZDFlMjYyMi02MDA3LTQwMjctOWEzNi05MGVmMDdiMThhYWQiLCJlbWFpbCI6ImRlc3Rla0BlbmNvcmUuY29tLnRyIiwiaWF0IjoxNzU1ODcyMjU5LCJleHAiOjE3NTU5NTg2NTksInNpZCI6IjIiLCJzdWIiOiIwIiwidHlwIjoiMCIsImVuY29yZV9zdG9yZUlkIjoiMCIsImVuY29yZV9wb3NJZCI6IjAiLCJlbmNvcmVfY2FzaGllcklkIjoiMCIsImlzcyI6ImRlcmluYmlsZ2kuY29tIiwiYXVkIjoiZGVyaW5iaWxnaS5jb20ifQ.WL_v-Ca2UULEa7Rc9hD2pimx47ermHEKesdp0YilZO8";
-                  try
-                   {
-                   globaltoken = await AuthApi.GetTokenAsync(
-                storeId: 0, posId: 0, cashierId: 0,
-                username: "kasa",
-                 password: "81dc9bdb52d04dc20036dbd8313ed055",
-             timeout: TimeSpan.FromSeconds(30));
+            // NCR Base URL'i config'den al
+            AuthApi.SetBaseUrl(CFG.NCRBASEURL);
+            try
+            {
+                globaltoken = await AuthApi.GetTokenAsync(
+                    storeId: 0, posId: 0, cashierId: 0,
+                    username: CFG.NCRUSERNAME,
+                    password: CFG.NCRPASSWORD,
+                    timeout: TimeSpan.FromSeconds(30));
 
             //         XtraMessageBox.Show("Token alındı.");
                  }
@@ -356,7 +364,7 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
 
             var client = new HttpClient(handler)
             {
-                BaseAddress = new Uri("http://192.168.3.10:9996/") // keep as-is; endpoint you’re testing
+                BaseAddress = new Uri(CFG.NCRBASEURL)
             }; 
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", globaltoken);

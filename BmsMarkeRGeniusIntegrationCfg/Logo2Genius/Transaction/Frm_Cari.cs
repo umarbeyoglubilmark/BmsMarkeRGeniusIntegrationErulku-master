@@ -30,6 +30,8 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
             VALUETABLE = VALUETABLE.Replace("XXX", CFG.FIRMNR);
             InitializeGLE();
             //InitializeData(null, null);
+            // Genius aktif değilse mağaza seçim alanını gizle
+            gb_Branch.Visible = CFG.ISGENIUSACTIVE == "1";
         }
 
         private void InitializeGLE()
@@ -50,7 +52,8 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
             SplashScreenManager.ShowForm(this, typeof(PROGRESSFORM), true, true, false);
             SplashScreenManager.Default.SetWaitFormCaption("LÜTFEN BEKLEYİN.");
             SplashScreenManager.Default.SetWaitFormDescription("");
-            string wh = gle_Value.EditValue.ToString();
+            string wh = gle_Value.EditValue?.ToString() ?? "0";
+            if (string.IsNullOrEmpty(wh)) wh = "0";
             if (!string.IsNullOrEmpty(CFG.DefaultBranchForGeniusSending))
                 wh = CFG.DefaultBranchForGeniusSending;
             string sqlFormattedDateStart = de_StartDate.DateTime.ToString("yyyy-MM-dd");
@@ -97,7 +100,8 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
 
         private void sb_Load_Click(object sender, EventArgs e)
         {
-            if (gle_Value.EditValue == null)
+            // Genius aktifse mağaza zorunlu, değilse zorunlu değil
+            if (CFG.ISGENIUSACTIVE == "1" && gle_Value.EditValue == null)
             {
                 XtraMessageBox.Show("Lütfen Değer Seçiniz", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;

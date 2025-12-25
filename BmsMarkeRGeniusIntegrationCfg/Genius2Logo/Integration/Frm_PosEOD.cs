@@ -112,9 +112,12 @@ namespace Integration.BmsMarkeRGeniusIntegrationCfg.Genius2Logo.Integration
             ce_DontDebtClose.Checked = CFG.DODEBTCLOSE == "1" ? false : true;
             ce_DontDebtClose.Visible = CFG.DODEBTCLOSE == "1" ? true : false;
             ce_WithoutControl.Visible = isAdmin;
+            // NCR ve Genius buton görünürlükleri
+            simpleButton2.Visible = CFG.ISNCRACTIVE == "1";  // NCR Kaydet
+            simpleButton1.Visible = CFG.ISGENIUSACTIVE == "1";  // Kaydet (Genius)
         }
 
-     
+
         private void loadLookupEdits()
         {
             //le_InvoiceClient
