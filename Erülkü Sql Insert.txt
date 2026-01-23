@@ -1,0 +1,41 @@
+
+----------------------------------------------------
+Erülkü Sql Insert
+
+Şimdi, senden yapmanı istediğim bazı şeyler var:
+
+BmsMarkerGeniusIntegrationLibrary modülü altında, HelperSQL.cs dosyası yarattım. Bu dosya altında bulunan aşağıdaki fonksiyonlar:
+
+InsertInvoice
+InsertReturnInvoice
+rollBackDebtClose
+createAccountingFiche
+RevisetInvoiceForOrderToInvoiceFromPaymentIntegration
+InsertCheque
+InsertCHFiche
+InsertKsFiche
+
+Logo Obje Aktarım yapısı ile yazılmıştır.Bunları SQL fonksiyonunlarına dönüştürmemiz gerekir.
+
+Rehberimiz pdf dosyaları olacak (ObjeRehber klasörü altında).İlgili fonksiyonlar için tüm pdf lere erişme yetkisi veriyorum 
+
+Rehberimizde bulunan kısımlar için sana kısa bir bilgi vereyim
+
+Malzeme Sınıfları - Şu an logo objede belirtilen veri tabanı alanı
+Alan Açıklaması - Veri tabanı alanının açıklaması
+Tür -Veri tabanı alanının türü (integer,Zstring vb.. null safety ve validation için)
+Uzunluk - MaxLength
+Veri Tabanı Tablosu - Sql de denk gelen tablo 
+Veri Tabanı alan - Sql de denk gelen tablo içindeki kolon
+
+Şöyle daha detaylı anlatayım:
+
+Malzeme sınıfları şu an aktarım şekli. Örneğin TYPE,NUMBER,DATE InsertInvoice modülünde bulunuyor.
+Alan açıklamaları senin daha iyi kavramana yardımcı olacak. 
+Türünü ve uzunluğunu genel aktarım tiplerine sorun yaşamamak için referans alacağız (integer ı string aktarma gibi sorunlar yaşamamak için)
+Veri tabanı tablosu ve alanını bu alanların hangi tabloya ve alana aktarılacağını belirlemek için kullanacağız
+
+Satış Faturaları Veri Aktarımları gibi başlıklar, nerede hangi sınıfları/veri tiplerini aktarılacağına dair referans alabilirsin
+
+ÖNEMLİ NOT: YARDIMCI KODLARA DOKUNULMAYACAK!!
+
