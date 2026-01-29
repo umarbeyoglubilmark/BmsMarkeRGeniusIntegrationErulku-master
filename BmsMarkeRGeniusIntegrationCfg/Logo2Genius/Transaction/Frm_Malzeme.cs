@@ -435,8 +435,9 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
             var productCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var barcodeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-
+            List<Bmsf_XXX_MarkeRGeniusIntegration_Malzemeler> itemsnew = new List<Bmsf_XXX_MarkeRGeniusIntegration_Malzemeler>();
             var duplicateNotes = new List<string>();
+
 
 
             for (int i = 0; i < selectedRows.Length; i++)
@@ -479,7 +480,7 @@ namespace BmsMarkeRGeniusIntegrationCfg.Logo2Genius.Transaction
                     {
                         id = 0,
                         code = code,
-                        isActive = true,
+                        isActive = item.SPECODE == "114"? false:true,
                         shortName = item.EXPLANATION,
                         name = item.EXPLANATION,
                         unitCode = unitCode,
